@@ -4,9 +4,24 @@
 
 /* ── Auth Layout ── */
 .auth-page {
-    display: flex;
     min-height: 100vh;
     background: var(--bg-main);
+    position: relative;
+}
+
+.auth-page .auth-particles {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.auth-split-layout,
+.auth-split {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
 }
 
 /* ── Visual Side (Left) ── */
@@ -93,6 +108,30 @@
     display: flex;
     align-items: flex-start;
     gap: var(--space-3);
+}
+
+.auth-features {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    list-style: none;
+    text-align: left;
+}
+
+.auth-features li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.auth-features li i {
+    color: var(--accent);
+    font-size: 0.8rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .auth-feature-item i {
