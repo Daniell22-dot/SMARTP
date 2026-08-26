@@ -14,6 +14,7 @@ from app.core.security import (
     verify_password
 )
 from sqlalchemy.exc import IntegrityError
+from app.models.users import User, UserRole
 from app.models.tenant import Tenant
 from pydantic import BaseModel, EmailStr
 import logging
