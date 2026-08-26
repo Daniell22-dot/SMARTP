@@ -172,7 +172,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 potential_paths = [
     os.path.abspath(os.path.join(BASE_DIR, "../../frontend")),
     os.path.abspath(os.path.join(BASE_DIR, "../frontend")),
-    os.path.abspath("frontend")
+    os.path.abspath("frontend"),
+    os.path.join(os.getcwd(), "frontend"),
 ]
 
 FRONTEND_DIR = None
@@ -185,7 +186,8 @@ if FRONTEND_DIR:
     logger.info(f"Serving static files from {FRONTEND_DIR}")
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 else:
-    logger.warning("Frontend directory not found. Static file serving disabled.")
+    logger.warning(f"Frontend directory not found. Tried: {potential_paths}")
+    logger.warning("Static file serving disabled.")
 
 
 handler = app
@@ -226,14 +228,19 @@ async def serve_frontend(request: Request, full_path: str):
             logger.info(f"Serving {portal} portal: {file_path}")
             return FileResponse(file_path)
     
+    # Strip "frontend/" prefix if present (added by Vercel rewrite /frontend/$1)
+    serve_path = full_path
+    if serve_path.startswith("frontend/"):
+        serve_path = serve_path[len("frontend/"):]
+    
     STATIC_EXTENSIONS = {'.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
                          '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map', '.json'}
     
-    _, ext = os.path.splitext(full_path)
+    _, ext = os.path.splitext(serve_path)
     ext = ext.lower()
     
     # Try to serve requested file
-    file_path = os.path.join(FRONTEND_DIR, full_path)
+    file_path = os.path.join(FRONTEND_DIR, serve_path)
     
     # If it's a file that exists, serve it
     if os.path.isfile(file_path):
@@ -241,7 +248,7 @@ async def serve_frontend(request: Request, full_path: str):
     
     # For static assets that don't exist, return 404 (do NOT fall back to index.html)
     if ext in STATIC_EXTENSIONS:
-        raise HTTPException(status_code=404, detail=f"Static file not found: {full_path}")
+        raise HTTPException(status_code=404, detail=f"Static file not found: {serve_path}")
     
     # For HTML page requests (no extension or .html), fall back to index.html (SPA routing)
     index_path = os.path.join(FRONTEND_DIR, "index.html")
