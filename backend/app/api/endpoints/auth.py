@@ -13,7 +13,7 @@ from app.core.security import (
     get_password_hash,
     verify_password
 )
-from app.models.users import User, UserRole
+from sqlalchemy.exc import IntegrityError
 from app.models.tenant import Tenant
 from pydantic import BaseModel, EmailStr
 import logging
