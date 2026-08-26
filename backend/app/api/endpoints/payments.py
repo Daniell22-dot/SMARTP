@@ -10,7 +10,7 @@ from app.models.tenant import Tenant
 from app.models.unit import Unit
 from app.api.endpoints.auth import get_current_user
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -131,8 +131,8 @@ async def verify_mpesa_payment(
         tenant_id=tenant.id,
         user_id=current_user.id,
         amount=monthly_rent,
-        payment_date=datetime.utcnow(),
-        due_date=datetime.utcnow(),
+        payment_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc),
         payment_method="M-Pesa",
         transaction_id=verification.transaction_code,
         status='pending'

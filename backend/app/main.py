@@ -10,7 +10,7 @@ from app.api.endpoints import (
     notifications, interaction, monitoring, arrears,
     utilities, messages
 )
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.database import engine, Base, AsyncSessionLocal
 from app.config import settings
 from fastapi.responses import FileResponse, RedirectResponse
@@ -152,20 +152,20 @@ async def trigger_reminders():
     """Triggered by Vercel Cron to send daily reminders"""
     from app.tasks.reminders import send_rent_reminders
     await send_rent_reminders()
-    return {"status": "reminders_sent", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "reminders_sent", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 @app.get("/api/v1/ping")
 async def ping():
     """Simple database-free ping to verify connectivity"""
     logger.debug("Ping endpoint reached")
-    return {"status": "pong", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

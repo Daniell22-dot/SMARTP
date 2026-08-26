@@ -12,14 +12,14 @@ class ApiResponse(BaseModel, Generic[T]):
     success: bool
     message: str
     data: Optional[T] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ErrorResponse(BaseModel):
     """Error response schema"""
     success: bool = False
     message: str
     detail: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Auth schemas
 class LoginRequest(BaseModel):
