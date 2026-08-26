@@ -1,0 +1,402 @@
+/* =========================================================
+   DASHBOARD — Chart wrappers, payment actions, QR, utility, invoice
+   ========================================================= */
+
+/* ── Chart Container ── */
+.chart-container {
+    position: relative;
+    width: 100%;
+}
+
+.chart-container canvas {
+    max-height: 300px;
+}
+
+/* ── Payment Actions ── */
+.payment-actions {
+    background: var(--bg-card);
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.payment-methods {
+    display: flex;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+    flex-wrap: wrap;
+}
+
+.method-btn {
+    flex: 1;
+    min-width: 100px;
+    padding: var(--space-3);
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-main);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.method-btn:hover,
+.method-btn.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+
+/* ── Manual M-Pesa ── */
+.manual-mpesa {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.manual-mpesa input {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: var(--text-sm);
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.manual-mpesa input:focus {
+    border-color: var(--accent);
+}
+
+.manual-mpesa button {
+    padding: 0.55rem 1rem;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+.manual-mpesa button:hover {
+    background: var(--accent-dark);
+}
+
+/* ── Payment History ── */
+.payment-history {
+    margin-top: var(--space-4);
+}
+
+/* ── QR Code Payment ── */
+.qr-payment {
+    text-align: center;
+}
+
+.qr-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.qr-header i {
+    font-size: 1.5rem;
+    color: var(--accent);
+}
+
+.qr-header h3 {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.qr-details {
+    background: var(--bg-main);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    border: 1px solid var(--border);
+}
+
+.qr-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) 0;
+}
+
+.qr-detail-row + .qr-detail-row {
+    border-top: 1px solid var(--border);
+}
+
+.qr-label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.qr-value {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 0.03em;
+}
+
+.qr-amount-row {
+    margin-bottom: var(--space-5);
+    text-align: left;
+}
+
+.qr-amount-row label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.qr-amount-row input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.qr-amount-row input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.qr-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: var(--space-4) 0;
+    min-height: 180px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+}
+
+.qr-code-container img,
+.qr-code-container canvas,
+.qr-code-container table {
+    display: block;
+    margin: 0 auto;
+}
+
+.qr-instructions {
+    background: var(--bg-main);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    margin: var(--space-4) 0;
+    text-align: left;
+    border: 1px solid var(--border);
+}
+
+.qr-instructions p {
+    font-size: var(--text-sm);
+    color: var(--text-main);
+    margin-bottom: var(--space-2);
+}
+
+.qr-instructions ol {
+    margin: 0;
+    padding-left: var(--space-5);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    line-height: 1.8;
+}
+
+.qr-instructions ol li strong {
+    color: var(--text-main);
+}
+
+.qr-close-btn {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--danger);
+    color: #ffffff;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all var(--transition-fast);
+}
+
+.qr-close-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+/* ── Utility Management ── */
+.utility-forms-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.utility-form-card {
+    padding: var(--space-5);
+}
+
+.utility-form-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+}
+
+.utility-form-header i {
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+.utility-form-header h3 {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 600;
+}
+
+.utility-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.utility-type-badge.water {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.utility-type-badge.wifi {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+/* ── Invoice / Statement ── */
+.invoice-document {
+    padding: var(--space-2);
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.invoice-tenant-info {
+    display: flex;
+    justify-content: space-between;
+    background: var(--bg-main);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-5);
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-table th,
+.invoice-table td {
+    padding: 0.65rem 0.85rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--text-sm);
+}
+
+.invoice-table th {
+    background: var(--bg-main);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.invoice-total-row td {
+    border-top: 2px solid var(--text-main);
+    padding-top: var(--space-3);
+    font-weight: 700;
+}
+
+/* ── Property Card ── */
+.property-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .utility-forms-row {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-methods {
+        flex-direction: column;
+    }
+
+    .manual-mpesa {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .manual-mpesa input {
+        min-width: auto;
+    }
+
+    .invoice-header {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .invoice-tenant-info {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+}
