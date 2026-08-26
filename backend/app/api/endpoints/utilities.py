@@ -124,9 +124,6 @@ async def list_utility_charges(
             query = query.where(UtilityCharge.utility_type == utility_type)
         if billing_month:
             query = query.where(UtilityCharge.billing_month == billing_month)
-
-        # Filter to current owner's charges only
-        query = query.where(UtilityCharge.created_by_user_id == current_user.id)
         
         result = await db.execute(query)
         charges = result.scalars().all()
@@ -150,11 +147,11 @@ async def get_utility_profit_summary(
     try:
         from app.models.payment import Payment
         
-        water_filter = [UtilityCharge.utility_type == 'water', UtilityCharge.created_by_user_id == current_user.id]
-        wifi_filter = [UtilityCharge.utility_type == 'wifi', UtilityCharge.created_by_user_id == current_user.id]
-        all_filter = [UtilityCharge.created_by_user_id == current_user.id]
+        water_filter = [UtilityCharge.utility_type == 'water']
+        wifi_filter = [UtilityCharge.utility_type == 'wifi']
+        all_filter = []
         
-        payment_filter = [Payment.status == 'paid', Payment.user_id == current_user.id]
+        payment_filter = [Payment.status == 'paid']
         
         if billing_month:
             water_filter.append(UtilityCharge.billing_month == billing_month)
