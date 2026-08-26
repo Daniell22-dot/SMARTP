@@ -226,6 +226,12 @@ async def serve_frontend(request: Request, full_path: str):
             logger.info(f"Serving {portal} portal: {file_path}")
             return FileResponse(file_path)
     
+    STATIC_EXTENSIONS = {'.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
+                         '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map', '.json'}
+    
+    _, ext = os.path.splitext(full_path)
+    ext = ext.lower()
+    
     # Try to serve requested file
     file_path = os.path.join(FRONTEND_DIR, full_path)
     
@@ -233,7 +239,11 @@ async def serve_frontend(request: Request, full_path: str):
     if os.path.isfile(file_path):
         return FileResponse(file_path)
     
+    # For static assets that don't exist, return 404 (do NOT fall back to index.html)
+    if ext in STATIC_EXTENSIONS:
+        raise HTTPException(status_code=404, detail=f"Static file not found: {full_path}")
     
+    # For HTML page requests (no extension or .html), fall back to index.html (SPA routing)
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
