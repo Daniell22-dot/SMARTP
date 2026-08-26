@@ -119,11 +119,14 @@ async def list_utility_charges(
     """List all global utility expenses with optional filters."""
     try:
         query = select(UtilityCharge).order_by(desc(UtilityCharge.created_at))
-        
+
         if utility_type:
             query = query.where(UtilityCharge.utility_type == utility_type)
         if billing_month:
             query = query.where(UtilityCharge.billing_month == billing_month)
+
+        # Filter to current owner's charges only
+        query = query.where(UtilityCharge.created_by_user_id == current_user.id)
         
         result = await db.execute(query)
         charges = result.scalars().all()
@@ -249,13 +252,18 @@ async def update_utility_charge(
     if not charge:
         raise HTTPException(status_code=404, detail="Utility charge not found")
 
-    
+    if update_in.status is not None:
+        if update_in.status not in VALID_CHARGE_STATUSES:
+            raise HTTPException(status_code=400, detail=f"status must be one of: {', '.join(VALID_CHARGE_STATUSES)}")
+        charge.status = update_in.status
+
+    if update_in.units_consumed is not None:
+        if charge.utility_type == 'wifi':
+            raise HTTPException(status_code=400, detail="WiFi charges cannot have units_consumed")
+        charge.units_consumed = update_in.units_consumed
+
     if update_in.amount is not None:
         charge.amount = update_in.amount
-    if update_in.units_consumed is not None:
-        charge.units_consumed = update_in.units_consumed
-    if update_in.status is not None:
-        charge.status = update_in.status
     if update_in.notes is not None:
         charge.notes = update_in.notes
     
