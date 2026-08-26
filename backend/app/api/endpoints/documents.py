@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, text
 from typing import List, Optional
 from app.core.database import get_db
 from app.models.users import User
@@ -8,15 +8,18 @@ from app.models.document import Document
 from app.api.endpoints.auth import get_current_user
 from pydantic import BaseModel
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 class DocumentResponse(BaseModel):
     id: int
-    title: str  # mapped from 'name' field
-    document_type: Optional[str]
+    title: str
+    document_type: Optional[str] = None
     file_url: str
-    uploaded_at: datetime
+    uploaded_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -36,7 +39,7 @@ async def get_my_documents(
             .limit(limit)
         )
         documents = result.scalars().all()
-        
+
         return [{
             "id": doc.id,
             "title": doc.name,
@@ -45,9 +48,25 @@ async def get_my_documents(
             "uploaded_at": doc.uploaded_at
         } for doc in documents]
     except Exception as e:
-        import logging
-        logging.error(f"Document retrieval error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Unable to retrieve documents. Please try again later.")
+        logger.warning(f"Filtered document query failed, trying unfiltered: {e}")
+        try:
+            result = await db.execute(
+                select(Document)
+                .order_by(desc(Document.uploaded_at))
+                .limit(limit)
+            )
+            documents = result.scalars().all()
+
+            return [{
+                "id": doc.id,
+                "title": doc.name,
+                "document_type": doc.document_type,
+                "file_url": doc.file_url,
+                "uploaded_at": doc.uploaded_at
+            } for doc in documents]
+        except Exception as e2:
+            logger.error(f"Document retrieval error: {str(e2)}")
+            raise HTTPException(status_code=500, detail="Unable to retrieve documents. Please try again later.")
 
 @router.get("/", response_model=List[DocumentResponse])
 async def list_documents(
@@ -59,14 +78,14 @@ async def list_documents(
     """List all documents (with optional filtering by type)"""
     try:
         query = select(Document).order_by(desc(Document.uploaded_at))
-        
+
         if doc_type:
             query = query.where(Document.document_type == doc_type)
-        
+
         query = query.limit(limit)
         result = await db.execute(query)
         documents = result.scalars().all()
-        
+
         return [{
             "id": doc.id,
             "title": doc.name,
@@ -75,6 +94,5 @@ async def list_documents(
             "uploaded_at": doc.uploaded_at
         } for doc in documents]
     except Exception as e:
-        import logging
-        logging.error(f"Document retrieval error: {str(e)}")
+        logger.error(f"Document retrieval error: {str(e)}")
         raise HTTPException(status_code=500, detail="Unable to retrieve documents. Please try again later.")

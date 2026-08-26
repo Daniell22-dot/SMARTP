@@ -9,7 +9,7 @@ from app.models.tenant import Tenant
 from app.models.lease import Lease
 from app.api.endpoints.auth import get_current_user
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -74,7 +74,7 @@ async def get_dashboard_stats(
         total_revenue=total_revenue,
         overdue_payments=overdue_payments,
         pending_payments=pending_payments,
-        last_updated=datetime.utcnow()
+        last_updated=datetime.now(timezone.utc)
     )
 
 @router.get("/summary", status_code=status.HTTP_200_OK)
