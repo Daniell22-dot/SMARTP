@@ -234,6 +234,14 @@
             document.getElementById('landlord-password').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') verifyLandlordPassword();
             });
+            if (new URLSearchParams(window.location.search).get('expired') === '1') {
+                const errEl = document.getElementById('key-error');
+                if (errEl) {
+                    errEl.textContent = ' Your session has expired. Please log in again.';
+                    errEl.style.display = 'block';
+                    errEl.style.color = '#f59e0b';
+                }
+            }
         });
     </script>
 </body>

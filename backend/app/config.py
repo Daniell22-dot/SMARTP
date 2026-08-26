@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     # JWT (REQUIRED)
     SECRET_KEY: str = Field(default_factory=lambda: _env_or_default("SECRET_KEY", "dev-secret-key-change-me"))
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
     # Portal Login Credentials (Admin & Landlord portals)
     ADMIN_PORTAL_ACCESS_KEY: str = os.getenv("ADMIN_PORTAL_ACCESS_KEY", "2026")

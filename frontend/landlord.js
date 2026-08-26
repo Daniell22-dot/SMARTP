@@ -35,6 +35,22 @@ let revenueChart = null;
     resetTimer();
 })();
 
+// ── Global 401 interceptor ────────────────────────────────────
+(function installAuthInterceptor() {
+    const _fetch = window.fetch;
+    let _redirecting = false;
+    window.fetch = async function (...args) {
+        const res = await _fetch.apply(this, args);
+        if (res.status === 401 && !_redirecting) {
+            _redirecting = true;
+            localStorage.removeItem('rms-landlord-token');
+            localStorage.removeItem('rms-landlord-role');
+            window.location.href = 'landlord-login.html?expired=1';
+        }
+        return res;
+    };
+})();
+
     
 async function initLandlordApp() {
     const token = localStorage.getItem('rms-landlord-token');
