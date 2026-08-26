@@ -44,8 +44,8 @@ class PasswordResetConfirm(BaseModel):
 # User schemas
 class UserRoleEnum(str, Enum):
     ADMIN = "admin"
-    OWNER = "owner"
-    CARETAKER = "caretaker"
+    LANDLORD = "landlord"
+    PROPERTY_MANAGER = "property_manager"
     TENANT = "tenant"
 
 class UserBase(BaseModel):

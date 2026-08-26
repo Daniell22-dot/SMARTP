@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, desc, and_
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.core.database import get_db
 from app.models.users import User
 from app.models.utility import UtilityCharge
@@ -11,6 +11,12 @@ from app.api.endpoints.dependencies import get_current_owner
 
 
 router = APIRouter()
+
+# System/demo user IDs that should not be recorded as charge creators
+SYSTEM_USER_IDS = (998, 999)
+
+VALID_UTILITY_TYPES = ('water', 'wifi')
+VALID_CHARGE_STATUSES = ('pending', 'paid')
 
 class UtilityChargeCreate(BaseModel):
     utility_type: str  # 'water' or 'wifi'
@@ -26,6 +32,8 @@ class UtilityChargeUpdate(BaseModel):
     notes: Optional[str] = None
 
 class UtilityChargeResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     utility_type: str
     units_consumed: Optional[float] = None
@@ -34,9 +42,6 @@ class UtilityChargeResponse(BaseModel):
     status: str
     notes: Optional[str] = None
     created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 class UtilityStatementResponse(BaseModel):
     tenant_name: str
@@ -72,7 +77,7 @@ async def create_utility_charge(
 ):
     """Create a new global utility expense (water or wifi)."""
     try:
-        if charge_in.utility_type not in ('water', 'wifi'):
+        if charge_in.utility_type not in VALID_UTILITY_TYPES:
             raise HTTPException(status_code=400, detail="utility_type must be 'water' or 'wifi'")
         
         if charge_in.utility_type == 'water' and charge_in.units_consumed is None:
@@ -84,7 +89,7 @@ async def create_utility_charge(
             amount=charge_in.amount,
             billing_month=charge_in.billing_month,
             notes=charge_in.notes,
-            created_by_user_id=current_user.id if current_user.id not in (998, 999) else None,
+            created_by_user_id=current_user.id if current_user.id not in SYSTEM_USER_IDS else None,
             status='pending'
         )
         db.add(new_charge)

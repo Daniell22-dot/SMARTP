@@ -36,7 +36,10 @@ class AvailableUnitOut(BaseModel):
     monthly_rent: float
 
 @router.get("/available-units", response_model=List[AvailableUnitOut])
-async def get_available_units(db: AsyncSession = Depends(get_db)):
+async def get_available_units(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """List all vacant units for self-assignment"""
     query = select(Unit, Property).join(Property).where(Unit.is_occupied == False)
     result = await db.execute(query)

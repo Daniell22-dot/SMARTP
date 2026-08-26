@@ -116,7 +116,7 @@ async def verify_mpesa_payment(
         raise HTTPException(status_code=404, detail="Tenant record not found")
 
     result = await db.execute(
-        select(Payment).where(Payment.transaction_id == verification.transaction_code)
+        select(Payment).where(Payment.mpesa_code == verification.transaction_code)
     )
     existing = result.scalar_one_or_none()
 
