@@ -136,23 +136,6 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
 
     raise credentials_exception
 
-@router.get("/debug-token")
-async def debug_token(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Temporary diagnostic: verify token decoding works end-to-end."""
-    import hashlib
-    secret_hash = hashlib.sha256(settings.SECRET_KEY.encode()).hexdigest()[:12]
-    return {
-        "status": "ok",
-        "user_email": current_user.email,
-        "user_role": current_user.role.value if current_user.role else None,
-        "secret_key_hash": secret_hash,
-        "algorithm": settings.ALGORITHM,
-        "token_expire_minutes": settings.ACCESS_TOKEN_EXPIRE_MINUTES,
-    }
-
 router = APIRouter()
 
 class UserCreate(BaseModel):
@@ -496,3 +479,20 @@ async def setup_db(
     except Exception as e:
         logger.error(f"Setup DB error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database initialization failed: {str(e)}")
+
+@router.get("/debug-token")
+async def debug_token(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Temporary diagnostic: verify token decoding works end-to-end."""
+    import hashlib
+    secret_hash = hashlib.sha256(settings.SECRET_KEY.encode()).hexdigest()[:12]
+    return {
+        "status": "ok",
+        "user_email": current_user.email,
+        "user_role": current_user.role.value if current_user.role else None,
+        "secret_key_hash": secret_hash,
+        "algorithm": settings.ALGORITHM,
+        "token_expire_minutes": settings.ACCESS_TOKEN_EXPIRE_MINUTES,
+    }
