@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from app.models.payment import Payment
 from app.models.lease import Lease
 from app.models.tenant import Tenant
@@ -40,7 +41,7 @@ class PaymentService:
             result = await self.db.execute(select(Tenant).filter(Tenant.id == payment.tenant_id))
             tenant = result.scalars().first()
             if tenant:
-                await send_payment_receipt(tenant.email, payment)
+                await send_payment_receipt(tenant.email, payment.amount)
 
     async def track_monthly_payments(self):
         """Automatically track and update payment status"""
@@ -54,12 +55,14 @@ class PaymentService:
     async def send_automatic_reminders(self):
         """Send payment reminders before due date"""
         result = await self.db.execute(
-            select(Lease).filter(Lease.next_payment_date <= datetime.now() + timedelta(days=3))
+            select(Lease)
+            .options(selectinload(Lease.unit))
+            .filter(Lease.next_payment_date <= datetime.now() + timedelta(days=3))
         )
         upcoming_due_dates = result.scalars().all()
         
         for lease in upcoming_due_dates:
             result = await self.db.execute(select(Tenant).filter(Tenant.id == lease.tenant_id))
             tenant = result.scalars().first()
-            if tenant:
-                await send_payment_reminder(tenant.email, lease)
+            if tenant and lease.unit:
+                await send_payment_reminder(tenant.email, lease.unit.unit_number)

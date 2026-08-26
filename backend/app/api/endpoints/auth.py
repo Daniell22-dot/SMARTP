@@ -48,9 +48,13 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
                 await db.commit()
                 await db.refresh(admin_user)
                 return admin_user
+            except IntegrityError:
+                await db.rollback()
+                result = await db.execute(select(User).filter(User.email == "admin@rms.local"))
+                return result.scalars().first()
             except Exception:
                 await db.rollback()
-                return admin_user
+                raise
 
         if token == "landlord-local-2026":
             result = await db.execute(select(User).filter(User.role == UserRole.LANDLORD))
@@ -67,9 +71,13 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
                 await db.commit()
                 await db.refresh(landlord_user)
                 return landlord_user
+            except IntegrityError:
+                await db.rollback()
+                result = await db.execute(select(User).filter(User.email == "landlord@rms.local"))
+                return result.scalars().first()
             except Exception:
                 await db.rollback()
-                return landlord_user
+                raise
 
 
     try:
@@ -100,10 +108,13 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
             await db.commit()
             await db.refresh(admin_user)
             return admin_user
+        except IntegrityError:
+            await db.rollback()
+            result = await db.execute(select(User).filter(User.email == "admin@rms.local"))
+            return result.scalars().first()
         except Exception:
             await db.rollback()
-            # Fall back to detached object if DB write fails
-            return admin_user
+            raise
     if role_claim == "landlord":
         landlord_user = User(
             email="landlord@rms.local", role=UserRole.LANDLORD,
@@ -115,9 +126,13 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
             await db.commit()
             await db.refresh(landlord_user)
             return landlord_user
+        except IntegrityError:
+            await db.rollback()
+            result = await db.execute(select(User).filter(User.email == "landlord@rms.local"))
+            return result.scalars().first()
         except Exception:
             await db.rollback()
-            return landlord_user
+            raise
 
     raise credentials_exception
 
