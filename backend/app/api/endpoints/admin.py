@@ -331,64 +331,67 @@ async def get_all_tenants_summary(
     db: AsyncSession = Depends(get_db)
 ):
     """Get summary of all tenants"""
-    
-    query = select(
-        User.id,
-        User.first_name,
-        User.last_name,
-        User.email,
-        User.phone,
-        Property.name.label("property_name"),
-        Unit.unit_number,
-        Unit.monthly_rent,
-        Tenant.status,
-        Tenant.id.label("tenant_record_id"),
-        func.max(Payment.payment_date).label("last_payment_date")
-    ).select_from(User)\
-     .outerjoin(Tenant, User.id == Tenant.user_id)\
-     .outerjoin(Unit, Tenant.unit_id == Unit.id)\
-     .outerjoin(Property, Unit.property_id == Property.id)\
-     .outerjoin(Payment, Tenant.id == Payment.tenant_id)\
-     .where(User.role == UserRole.TENANT)\
-     .group_by(User.id, User.first_name, User.last_name, User.email, User.phone, Property.name, Unit.unit_number, Unit.monthly_rent, Tenant.status, Tenant.id)
-    
-    if status:
-        query = query.where(Tenant.status == status)
-    
-    result = await db.execute(query)
-    tenants_data = result.all()
-    
-    tenants_summary = []
-    for tenant in tenants_data:
-        # Calculate arrears (only if tenant record exists)
-        arrears = 0.0
-        if tenant.tenant_record_id:
-            expected_rent = tenant.monthly_rent or 0
-            result = await db.execute(
-                select(func.sum(Payment.amount)).where(
-                    and_(
-                        Payment.tenant_id == tenant.tenant_record_id,
-                        Payment.status == 'paid'
+    try:
+        query = select(
+            User.id,
+            User.first_name,
+            User.last_name,
+            User.email,
+            User.phone,
+            Property.name.label("property_name"),
+            Unit.unit_number,
+            Unit.monthly_rent,
+            Tenant.status,
+            Tenant.id.label("tenant_record_id"),
+            func.max(Payment.payment_date).label("last_payment_date")
+        ).select_from(User)\
+         .outerjoin(Tenant, User.id == Tenant.user_id)\
+         .outerjoin(Unit, Tenant.unit_id == Unit.id)\
+         .outerjoin(Property, Unit.property_id == Property.id)\
+         .outerjoin(Payment, Tenant.id == Payment.tenant_id)\
+         .where(User.role == UserRole.TENANT)\
+         .group_by(User.id, User.first_name, User.last_name, User.email, User.phone, Property.name, Unit.unit_number, Unit.monthly_rent, Tenant.status, Tenant.id)
+        
+        if status:
+            query = query.where(Tenant.status == status)
+        
+        result = await db.execute(query)
+        tenants_data = result.all()
+        
+        tenants_summary = []
+        for tenant in tenants_data:
+            arrears = 0.0
+            if tenant.tenant_record_id:
+                expected_rent = tenant.monthly_rent or 0
+                arrears_result = await db.execute(
+                    select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                        and_(
+                            Payment.tenant_id == tenant.tenant_record_id,
+                            Payment.status == 'paid'
+                        )
                     )
                 )
-            )
-            total_paid = result.scalar() or 0
-            arrears = max(0, expected_rent - total_paid)
+                total_paid = arrears_result.scalar() or 0
+                arrears = max(0, expected_rent - total_paid)
+            
+            tenants_summary.append(TenantSummary(
+                id=tenant.id,
+                name=f"{tenant.first_name or ''} {tenant.last_name or ''}".strip() or "Unknown",
+                email=tenant.email or "N/A",
+                phone=tenant.phone or "N/A",
+                property_name=tenant.property_name or "Unassigned",
+                unit_number=tenant.unit_number or "N/A",
+                monthly_rent=tenant.monthly_rent or 0.0,
+                status=tenant.status or "active",
+                last_payment_date=tenant.last_payment_date,
+                arrears=arrears
+            ))
         
-        tenants_summary.append(TenantSummary(
-            id=tenant.id, # Using User.id as the primary identifier now
-            name=f"{tenant.first_name} {tenant.last_name or ''}".strip(),
-            email=tenant.email,
-            phone=tenant.phone or "N/A",
-            property_name=tenant.property_name or "Unassigned",
-            unit_number=tenant.unit_number or "N/A",
-            monthly_rent=tenant.monthly_rent or 0.0,
-            status=tenant.status or "active", # Default to active if no record
-            last_payment_date=tenant.last_payment_date,
-            arrears=arrears
-        ))
-    
-    return tenants_summary
+        return tenants_summary
+    except Exception as e:
+        import logging
+        logging.error(f"Error in get_all_tenants_summary: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to load tenants: {str(e)}")
 
 @router.get("/tenants/{user_id}", response_model=TenantSummary)
 async def get_tenant_by_user_id(

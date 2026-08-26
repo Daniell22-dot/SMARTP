@@ -130,6 +130,12 @@ async function loadTenants() {
         const res = await fetch(`${API_BASE_URL}/api/v1/admin/tenants`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (!res.ok) {
+            const text = await res.text();
+            console.error('Tenants load failed:', res.status, text);
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center">Error ${res.status} loading tenants.</td></tr>`;
+            return;
+        }
         const tenants = await res.json();
         
         if (!tenants || tenants.length === 0) {
@@ -453,15 +459,18 @@ async function submitUtilityCharge(event, utilityType) {
             body: JSON.stringify(payload)
         });
         
-        const data = await res.json();
         if (res.ok) {
+            const data = await res.json();
             showToast(data.message || `${utilityType} charge added!`, 'success');
             document.getElementById(`${utilityType}-charge-form`).reset();
             setDefaultBillingMonth();
             loadUtilityCharges();
             loadUtilityProfitSummary();
         } else {
-            showToast(data.detail || `Error ${res.status}: Failed to add charge`, 'error');
+            const text = await res.text();
+            let msg = `Error ${res.status}`;
+            try { msg = JSON.parse(text).detail || msg; } catch(e) { msg = text || msg; }
+            showToast(msg, 'error');
         }
     } catch (err) {
         console.error('Error adding utility charge:', err);
@@ -486,6 +495,12 @@ async function loadUtilityCharges() {
         const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (!res.ok) {
+            const text = await res.text();
+            console.error('Utility charges load failed:', res.status, text);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem;">Error ${res.status} loading charges.</td></tr>`;
+            return;
+        }
         const charges = await res.json();
         
         if (!charges || !Array.isArray(charges) || charges.length === 0) {
@@ -580,6 +595,10 @@ async function loadUtilityProfitSummary() {
         const res = await fetch(`${API_BASE_URL}/api/v1/utilities/profit-summary`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (!res.ok) {
+            console.error('Profit summary load failed:', res.status);
+            return;
+        }
         const data = await res.json();
         
         document.getElementById('water-expense').textContent = `Ksh ${(data.total_water_expense || 0).toLocaleString()}`;

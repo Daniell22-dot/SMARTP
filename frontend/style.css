@@ -756,6 +756,7 @@ label { cursor: pointer; color: var(--text-main); display: flex; align-items: ce
     justify-content: center;
     z-index: 1000;
     padding: 1rem;
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -766,6 +767,9 @@ label { cursor: pointer; color: var(--text-main); display: flex; align-items: ce
     width: 100%;
     position: relative;
     box-shadow: var(--shadow-md);
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: auto;
 }
 
 .modal-content h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; }
@@ -783,9 +787,9 @@ label { cursor: pointer; color: var(--text-main); display: flex; align-items: ce
 .close:hover { color: var(--danger); }
 
 .qr-close-btn {
-    position: absolute;
+    position: sticky;
     top: 0.5rem;
-    right: 0.6rem;
+    float: right;
     width: 30px;
     height: 30px;
     border-radius: 50%;
