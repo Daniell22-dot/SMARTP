@@ -2,7 +2,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Generic, TypeVar
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 T = TypeVar('T')
 

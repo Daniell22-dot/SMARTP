@@ -150,11 +150,11 @@ async def get_utility_profit_summary(
     try:
         from app.models.payment import Payment
         
-        water_filter = [UtilityCharge.utility_type == 'water']
-        wifi_filter = [UtilityCharge.utility_type == 'wifi']
-        all_filter = []
+        water_filter = [UtilityCharge.utility_type == 'water', UtilityCharge.created_by_user_id == current_user.id]
+        wifi_filter = [UtilityCharge.utility_type == 'wifi', UtilityCharge.created_by_user_id == current_user.id]
+        all_filter = [UtilityCharge.created_by_user_id == current_user.id]
         
-        payment_filter = [Payment.status == 'paid']
+        payment_filter = [Payment.status == 'paid', Payment.user_id == current_user.id]
         
         if billing_month:
             water_filter.append(UtilityCharge.billing_month == billing_month)

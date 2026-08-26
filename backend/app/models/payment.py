@@ -1,7 +1,7 @@
 # backend/app/models/payment.py
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from .base import BaseModel
 
 # enums for payment status and methods could be added here for better data integrity and easier querying in the future. For now, we will use string fields for simplicity.
@@ -26,7 +26,7 @@ class Payment(BaseModel):
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     lease_id = Column(Integer, ForeignKey('leases.id'))
     amount = Column(Float, nullable=False)
-    payment_date = Column(DateTime, default=datetime.utcnow)
+    payment_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     due_date = Column(DateTime, nullable=False)
     payment_method = Column(String(50))  # bank_transfer, cash, check, card, mpesa, qrcode scan.
     status = Column(String(20), default='pending')  # pending, paid, overdue, failed
