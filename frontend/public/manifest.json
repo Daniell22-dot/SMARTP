@@ -1,0 +1,42 @@
+{
+  "name": "Rental Management System",
+  "short_name": "RMS",
+  "description": "Complete rental property management for landlords and tenants",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your dashboard"
+    },
+    {
+      "name": "Payments",
+      "url": "/payments",
+      "description": "Make a payment"
+    },
+    {
+      "name": "Maintenance",
+      "url": "/maintenance",
+      "description": "Report an issue"
+    }
+  ]
+}
