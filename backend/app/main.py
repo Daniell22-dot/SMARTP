@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from app.api.endpoints import (
     auth, tenants, properties, payments, 
@@ -190,28 +191,6 @@ async def ping():
     """Simple database-free ping to verify connectivity"""
     logger.debug("Ping endpoint reached")
     return {"status": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-potential_paths = [
-    os.path.abspath(os.path.join(BASE_DIR, "../../frontend")),
-    os.path.abspath(os.path.join(BASE_DIR, "../frontend")),
-    os.path.abspath("frontend"),
-    os.path.join(os.getcwd(), "frontend"),
-]
-
-FRONTEND_DIR = None
-for p in potential_paths:
-    if os.path.exists(p) and os.path.isdir(p):
-        FRONTEND_DIR = p
-        break
-
-if FRONTEND_DIR:
-    logger.info(f"Serving static files from {FRONTEND_DIR}")
-    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
-else:
-    logger.warning(f"Frontend directory not found. Tried: {potential_paths}")
-    logger.warning("Static file serving disabled.")
 
 
 handler = app

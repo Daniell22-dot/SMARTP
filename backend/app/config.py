@@ -116,7 +116,7 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
 
     class Config:
-        env_file = ".env"
+        env_file = ".env" if not os.getenv("TESTING") else None
         extra = "ignore"
         case_sensitive = False
 
