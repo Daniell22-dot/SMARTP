@@ -20,6 +20,10 @@
     {
       "source": "/robots.txt",
       "destination": "/api/main.py"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/main.py"
     }
   ],
   "crons": [
