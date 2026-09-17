@@ -355,9 +355,6 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
-import secrets as _secrets
-import hashlib as _hashlib
-
 @router.post("/forgot-password")
 async def forgot_password(
     request: Request,
@@ -378,8 +375,8 @@ async def forgot_password(
         return {"message": "If an account exists for this email, a reset link will be sent."}
 
     # Generate a secure random token, store only its hash
-    token = _secrets.token_urlsafe(32)
-    token_hash = _hashlib.sha256(token.encode()).hexdigest()
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
     expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
 
     reset = PasswordResetToken(
@@ -397,7 +394,7 @@ async def forgot_password(
     logger.info(f"Password reset requested for {normalized_email}. Token (dev only): {token}")
     try:
         from app.core.email import send_email
-        reset_link = f"{settings.PUBLIC_BASE_URL or 'http://localhost:3000'}/reset-password?token={token}&email={normalized_email}"
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={normalized_email}"
         await send_email(
             to_email=normalized_email,
             subject="Password Reset",
@@ -420,7 +417,7 @@ async def reset_password(
         raise HTTPException(status_code=429, detail="Too many attempts. Please try again later.")
 
     normalized_email = str(req.email).strip().lower()
-    token_hash = _hashlib.sha256(req.token.encode()).hexdigest()
+    token_hash = hashlib.sha256(req.token.encode()).hexdigest()
 
     result = await db.execute(select(User).filter(User.email == normalized_email))
     user = result.scalars().first()
@@ -484,6 +481,7 @@ async def setup_db(
         from app.models.monitoring import SystemMetric, LogEntry
         from app.models.cache import CacheItem
         from app.models.utility import UtilityCharge
+        from app.models.password_reset import PasswordResetToken
         
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

@@ -3,14 +3,53 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from app.api.endpoints.auth import get_current_user
 from app.core.database import get_db
-from app.models.users import User
+from app.models.users import User, UserRole
 from app.models.tenant import Tenant
 from pydantic import BaseModel
+from typing import List, Optional
 
 router = APIRouter()
 
 class PhotoUpload(BaseModel):
     photo_data: str
+
+class ContactOut(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    role: UserRole
+
+    class Config:
+        from_attributes = True
+
+@router.get("/contacts", response_model=List[ContactOut])
+async def get_contacts(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get users that the current user can message"""
+    if current_user.role == UserRole.TENANT:
+        # Tenants can message admins and landlords
+        result = await db.execute(
+            select(User).where(User.role.in_([UserRole.ADMIN, UserRole.LANDLORD]))
+        )
+    elif current_user.role == UserRole.LANDLORD:
+        # Landlords can message tenants and admins
+        result = await db.execute(
+            select(User).where(User.role.in_([UserRole.TENANT, UserRole.ADMIN]))
+        )
+    elif current_user.role == UserRole.ADMIN:
+        # Admins can message everyone
+        result = await db.execute(select(User))
+    elif current_user.role == UserRole.PROPERTY_MANAGER:
+        # Property managers can message everyone
+        result = await db.execute(select(User))
+    else:
+        result = await db.execute(select(User).where(User.role == UserRole.ADMIN))
+    
+    contacts = result.scalars().all()
+    return contacts
 
 @router.post("/profile-photo")
 async def upload_profile_photo(

@@ -51,6 +51,7 @@ async def lifespan(app: FastAPI):
             import app.models.cache
             import app.models.utility
             import app.models.message
+            import app.models.password_reset
 
             # Create database tables - do NOT do this in request path on Vercel
             logger.info("Non-Vercel environment detected. Initializing database tables...")
