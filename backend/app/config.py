@@ -7,6 +7,7 @@ from pydantic import ValidationError, Field
 from typing import Optional, List
 import logging
 import sys
+import secrets as _secrets
 
 
 def _env_or_default(name: str, default: Optional[str] = None) -> Optional[str]:
@@ -28,6 +29,11 @@ class Settings(BaseSettings):
     LANDLORD_PORT: int = int(os.getenv("LANDLORD_PORT", "8001"))
     ADMIN_PORT: int = int(os.getenv("ADMIN_PORT", "8002"))
     DEPLOYMENT_ENV: str = os.getenv("DEPLOYMENT_ENV", "development")
+
+    PUBLIC_BASE_URL: Optional[str] = os.getenv("PUBLIC_BASE_URL")
+
+    # Frontend URL (used for password reset links)
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
     BACKEND_CORS_ORIGINS: List[str] = [
         "https://tuiyabelong.vercel.app",
@@ -77,7 +83,7 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 40
 
     # JWT (REQUIRED)
-    SECRET_KEY: str = Field(default_factory=lambda: _env_or_default("SECRET_KEY", "dev-secret-key-change-me"))
+    SECRET_KEY: Optional[str] = Field(default_factory=lambda: _env_or_default("SECRET_KEY"))
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
@@ -119,8 +125,13 @@ class Settings(BaseSettings):
         """Log configuration issues without blocking local development startup."""
         warnings = []
 
-        if not self.SECRET_KEY or self.SECRET_KEY in ("your secret key for encryption", ""):
-            warnings.append("SECRET_KEY not configured; using development fallback")
+        if not self.SECRET_KEY:
+            if self.DEPLOYMENT_ENV.lower() != "development":
+                raise RuntimeError(
+                    "SECRET_KEY must be set. Generate one with `python -c \"import secrets; print(secrets.token_hex(32))\"`"
+                )
+            warnings.append("SECRET_KEY not configured; falling back to a generated dev key")
+            self.SECRET_KEY = _secrets.token_hex(32)
 
         if not self.DATABASE_URL:
             warnings.append("DATABASE_URL not configured; using local SQLite fallback")

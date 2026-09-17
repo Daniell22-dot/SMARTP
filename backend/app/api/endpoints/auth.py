@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from app.config import settings
 from app.core.database import get_db
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -16,8 +16,11 @@ from app.core.security import (
 from sqlalchemy.exc import IntegrityError
 from app.models.users import User, UserRole
 from app.models.tenant import Tenant
+from app.models.password_reset import PasswordResetToken
 from pydantic import BaseModel, EmailStr
 import logging
+import secrets
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -29,110 +32,19 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    # Fixed/legacy portal tokens for single-owner admin/landlord portals
-    if token in ("admin-local-2026", "landlord-local-2026"):
-        if token == "admin-local-2026":
-            result = await db.execute(select(User).filter(User.role == UserRole.ADMIN))
-            user = result.scalars().first()
-            if user:
-                return user
-            # Create admin user in DB if not exists
-            admin_user = User(
-                email="admin@rms.local", role=UserRole.ADMIN,
-                first_name="Admin", last_name="Local",
-                hashed_password=get_password_hash("admin@2026"), phone="0700000000"
-            )
-            db.add(admin_user)
-            try:
-                await db.commit()
-                await db.refresh(admin_user)
-                return admin_user
-            except IntegrityError:
-                await db.rollback()
-                result = await db.execute(select(User).filter(User.email == "admin@rms.local"))
-                return result.scalars().first()
-            except Exception:
-                await db.rollback()
-                raise
-
-        if token == "landlord-local-2026":
-            result = await db.execute(select(User).filter(User.role == UserRole.LANDLORD))
-            user = result.scalars().first()
-            if user:
-                return user
-            landlord_user = User(
-                email="landlord@rms.local", role=UserRole.LANDLORD,
-                first_name="Landlord", last_name="Local",
-                hashed_password=get_password_hash("landlord@2026"), phone="0700000001"
-            )
-            db.add(landlord_user)
-            try:
-                await db.commit()
-                await db.refresh(landlord_user)
-                return landlord_user
-            except IntegrityError:
-                await db.rollback()
-                result = await db.execute(select(User).filter(User.email == "landlord@rms.local"))
-                return result.scalars().first()
-            except Exception:
-                await db.rollback()
-                raise
-
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
-        role_claim = payload.get("role")
-        if email is None and role_claim is None:
+        if email is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    # If DB has bootstrap users, use them.
-    if email:
-        result = await db.execute(select(User).filter(User.email == email))
-        user = result.scalars().first()
-        if user is not None:
-            return user
-
-    # Portal-login tokens: create DB user if not found, so endpoints work properly
-    if role_claim == "admin":
-        admin_user = User(
-            email="admin@rms.local", role=UserRole.ADMIN,
-            first_name="Admin", last_name="Local",
-            hashed_password=get_password_hash("admin@2026"), phone="0700000000"
-        )
-        db.add(admin_user)
-        try:
-            await db.commit()
-            await db.refresh(admin_user)
-            return admin_user
-        except IntegrityError:
-            await db.rollback()
-            result = await db.execute(select(User).filter(User.email == "admin@rms.local"))
-            return result.scalars().first()
-        except Exception:
-            await db.rollback()
-            raise
-    if role_claim == "landlord":
-        landlord_user = User(
-            email="landlord@rms.local", role=UserRole.LANDLORD,
-            first_name="Landlord", last_name="Local",
-            hashed_password=get_password_hash("landlord@2026"), phone="0700000001"
-        )
-        db.add(landlord_user)
-        try:
-            await db.commit()
-            await db.refresh(landlord_user)
-            return landlord_user
-        except IntegrityError:
-            await db.rollback()
-            result = await db.execute(select(User).filter(User.email == "landlord@rms.local"))
-            return result.scalars().first()
-        except Exception:
-            await db.rollback()
-            raise
+    result = await db.execute(select(User).filter(User.email == email))
+    user = result.scalars().first()
+    if user is not None:
+        return user
 
     raise credentials_exception
 
@@ -144,7 +56,6 @@ class UserCreate(BaseModel):
     password: str
     first_name: str
     last_name: str = ""
-    role: UserRole = UserRole.TENANT
     terms_accepted: bool
     room_number: Optional[str] = None
     monthly_rent: Optional[float] = None
@@ -219,9 +130,16 @@ login_limiter = RateLimiter()
 register_limiter = RateLimiter()
 
 def get_client_ip(request) -> str:
-    """Extract client IP from request, handling proxies"""
-    if "x-forwarded-for" in request.headers:
-        return request.headers["x-forwarded-for"].split(",")[0].strip()
+    """Extract client IP from request, handling proxies safely.
+
+    X-Forwarded-For is only trusted when it is supplied by a known proxy
+    (e.g. Vercel/Cloudflare in production). In development we always use the
+    direct socket peer address to avoid spoofing.
+    """
+    if settings.DEPLOYMENT_ENV.lower() != "development":
+        # Trust X-Forwarded-For only in deployed environments behind a proxy.
+        if "x-forwarded-for" in request.headers:
+            return request.headers["x-forwarded-for"].split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 def check_rate_limit(key, attempts_list, limit, window=3600):
@@ -289,7 +207,7 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
         hashed_password=get_password_hash(user_in.password),
         first_name=user_in.first_name,
         last_name=user_in.last_name,
-        role=user_in.role
+        role=UserRole.TENANT
     )
     db.add(new_user)
     try:
@@ -430,17 +348,114 @@ async def portal_login(request: Request, req: PortalLoginRequest):
             detail="Invalid portal. Must be 'admin' or 'landlord'",
         )
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    token: str
+    new_password: str
+
+import secrets as _secrets
+import hashlib as _hashlib
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    req: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Request a password reset. In production this sends an email with a reset link."""
+    client_ip = get_client_ip(request)
+    if not login_limiter.check_rate_limit(client_ip, limit=5, window=3600):
+        raise HTTPException(status_code=429, detail="Too many reset requests. Please try again in a few minutes.")
+
+    normalized_email = str(req.email).strip().lower()
+    result = await db.execute(select(User).filter(User.email == normalized_email))
+    user = result.scalars().first()
+
+    # Always return the same message to avoid user enumeration
+    if not user:
+        return {"message": "If an account exists for this email, a reset link will be sent."}
+
+    # Generate a secure random token, store only its hash
+    token = _secrets.token_urlsafe(32)
+    token_hash = _hashlib.sha256(token.encode()).hexdigest()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    reset = PasswordResetToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+        is_used=False
+    )
+    db.add(reset)
+    await db.commit()
+
+    # In production, send an email with a link like:
+    #   https://tuiyabelong.com/reset-password?token=<token>&email=<email>
+    # For now, log the reset URL (dev convenience).
+    logger.info(f"Password reset requested for {normalized_email}. Token (dev only): {token}")
+    try:
+        from app.core.email import send_email
+        reset_link = f"{settings.PUBLIC_BASE_URL or 'http://localhost:3000'}/reset-password?token={token}&email={normalized_email}"
+        await send_email(
+            to_email=normalized_email,
+            subject="Password Reset",
+            body=f"Click this link to reset your password: {reset_link}"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send reset email: {e}")
+
+    return {"message": "If an account exists for this email, a reset link will be sent."}
+
 @router.post("/reset-password")
-async def reset_password(email: EmailStr, db: AsyncSession = Depends(get_db)):
-    # Placeholder for password reset logic (sending email)
-    result = await db.execute(select(User).filter(User.email == email))
+async def reset_password(
+    request: Request,
+    req: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Validate the reset token and set a new password."""
+    client_ip = get_client_ip(request)
+    if not login_limiter.check_rate_limit(client_ip, limit=10, window=3600):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please try again later.")
+
+    normalized_email = str(req.email).strip().lower()
+    token_hash = _hashlib.sha256(req.token.encode()).hexdigest()
+
+    result = await db.execute(select(User).filter(User.email == normalized_email))
     user = result.scalars().first()
     if not user:
-        # Don't reveal if user exists for security
-        return {"message": "If an account exists for this email, a reset link will be sent."}
-    
-    # In a real app, generate a token, save it, and send an email
-    return {"message": "If an account exists for this email, a reset link will be sent."}
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
+
+    result = await db.execute(
+        select(PasswordResetToken).filter(
+            PasswordResetToken.token_hash == token_hash,
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.is_used == False,  # noqa: E712
+        )
+    )
+    reset = result.scalars().first()
+    if not reset:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
+
+    now = datetime.now(timezone.utc)
+    if reset.expires_at < now:
+        raise HTTPException(status_code=400, detail="This reset token has expired. Please request a new one.")
+
+    from app.core.validators import PasswordValidator
+    validation = PasswordValidator.validate(req.new_password)
+    if not validation["valid"]:
+        error_msg = " | ".join(validation["errors"])
+        raise HTTPException(status_code=422, detail=f"Password requirements not met: {error_msg}")
+
+    user.hashed_password = get_password_hash(req.new_password)
+    reset.is_used = True
+    await db.commit()
+
+    login_limiter.reset(client_ip)
+    logger.info(f"Password reset completed for {normalized_email}")
+    return {"message": "Password has been reset successfully. You can now log in."}
 
 @router.get("/setup-db")
 async def setup_db(
@@ -479,20 +494,3 @@ async def setup_db(
     except Exception as e:
         logger.error(f"Setup DB error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database initialization failed: {str(e)}")
-
-@router.get("/debug-token")
-async def debug_token(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Temporary diagnostic: verify token decoding works end-to-end."""
-    import hashlib
-    secret_hash = hashlib.sha256(settings.SECRET_KEY.encode()).hexdigest()[:12]
-    return {
-        "status": "ok",
-        "user_email": current_user.email,
-        "user_role": current_user.role.value if current_user.role else None,
-        "secret_key_hash": secret_hash,
-        "algorithm": settings.ALGORITHM,
-        "token_expire_minutes": settings.ACCESS_TOKEN_EXPIRE_MINUTES,
-    }
