@@ -92,15 +92,40 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS - strict allowlist only, no wildcard origin regex
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Add security headers to prevent clickjacking, MIME sniffing, etc."""
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if settings.DEPLOYMENT_ENV.lower() != "development":
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'; base-uri 'self'"
+    return response
+
+# Security: hide /admin and /landlord routes. They are only served behind the
+# Next.js frontend now; the raw HTML fallback pages are removed from public
+# serving. This prevents search engines and scanners from discovering admin paths.
+@app.middleware("http")
+async def hide_admin_paths(request: Request, call_next):
+    """Return 404 for admin/landlord paths unless routed by the frontend."""
+    path = request.url.path
+    if path.startswith("/admin") or path.startswith("/landlord"):
+        # Allow API calls through (token-protected already)
+        if not path.startswith("/api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+    return await call_next(request)
 
 # Add middleware to detect portal type based on port or hostname
 @app.middleware("http")
@@ -192,26 +217,44 @@ else:
 
 handler = app
 
-@app.get("/admin")
-async def serve_admin_login():
-    """Serve admin login page"""
-    file_path = os.path.join(FRONTEND_DIR, "admin-login.html")
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="Admin login page not found")
-
-@app.get("/landlord")
-async def serve_landlord_login():
-    """Serve landlord login page"""
-    file_path = os.path.join(FRONTEND_DIR, "landlord-login.html")
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="Landlord login page not found")
+@app.get("/robots.txt")
+async def robots_txt():
+    """Serve robots.txt to block crawling of admin/landlord/api paths."""
+    robots_content = (
+        "User-agent: *\n"
+        "Disallow: /admin\n"
+        "Disallow: /landlord\n"
+        "Disallow: /api/\n"
+        "Disallow: /frontend/\n"
+        "Disallow: /static/\n"
+        "Disallow: /docs\n"
+        "Disallow: /redoc\n"
+        "Disallow: /openapi.json\n"
+        "Disallow: /admin-login\n"
+        "Disallow: /landlord-login\n"
+        "Sitemap: https://tuiyabelong.com/sitemap.xml\n"
+    )
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(content=robots_content)
 
 @app.get("/{full_path:path}")
 async def serve_frontend(request: Request, full_path: str):
     """Serve frontend files with portal-aware routing"""
-    
+
+    # Block sensitive admin/landlord frontend files from public serving.
+    # These are internal-only portals reachable through the Next.js app.
+    SENSITIVE_PATHS = {
+        "admin-login.html", "admin.html", "landlord-login.html", "landlord.html",
+        "admin.js", "landlord.js", "admin-login", "landlord-login",
+        "admin", "landlord",
+    }
+    stripped = full_path
+    if stripped.startswith("frontend/"):
+        stripped = stripped[len("frontend/"):]
+    base = stripped.rstrip("/")
+    if base in SENSITIVE_PATHS or any(base.endswith(f"/{s}") for s in SENSITIVE_PATHS):
+        raise HTTPException(status_code=404, detail="Not found")
+
     # Get the detected portal from middleware
     portal = getattr(request.state, 'portal', 'tenant')
     

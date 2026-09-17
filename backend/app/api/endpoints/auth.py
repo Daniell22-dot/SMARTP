@@ -11,7 +11,6 @@ from app.core.security import (
     authenticate_user, 
     create_access_token, 
     get_password_hash,
-    verify_password
 )
 from sqlalchemy.exc import IntegrityError
 from app.models.users import User, UserRole
