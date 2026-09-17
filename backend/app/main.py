@@ -238,6 +238,48 @@ async def robots_txt():
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(content=robots_content)
 
+
+@app.get("/sitemap.xml")
+async def sitemap_xml():
+    """Serve sitemap.xml for search engines."""
+    base_url = "https://tuiyabelong.com"
+    sitemap_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{base_url}/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>{base_url}/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>{base_url}/register</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>{base_url}/dashboard</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>{base_url}/landlord/dashboard</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>{base_url}/admin/dashboard</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>'''
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(content=sitemap_content, media_type="application/xml")
+
+
 @app.get("/{full_path:path}")
 async def serve_frontend(request: Request, full_path: str):
     """Serve frontend files with portal-aware routing"""
