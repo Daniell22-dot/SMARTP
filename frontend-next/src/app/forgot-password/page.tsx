@@ -1,0 +1,117 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { apiClient } from '@/lib/api';
+import { toast } from 'react-hot-toast';
+import { Loader2, Mail, CheckCircle } from 'lucide-react';
+
+const forgotSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+type ForgotForm = z.infer<typeof forgotSchema>;
+
+export default function ForgotPasswordPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotForm>({
+    resolver: zodResolver(forgotSchema),
+  });
+
+  const onSubmit = async (data: ForgotForm) => {
+    setIsLoading(true);
+    try {
+      await apiClient.post('/auth/forgot-password', data);
+      setIsSubmitted(true);
+      toast.success('If an account exists, a reset link has been sent.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to send reset link');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+        <div className="w-full max-w-md text-center">
+          <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Check your email
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            If an account exists for that email, you'll receive a password reset link shortly.
+          </p>
+          <Link href="/login">
+            <Button className="w-full">Back to Sign In</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2">
+            <div className="h-12 w-12 rounded-xl bg-primary-600 flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">RMS</span>
+            </div>
+            <span className="font-semibold text-2xl text-gray-900 dark:text-white">Rental RMS</span>
+          </Link>
+        </div>
+
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle>Forgot password?</CardTitle>
+            <CardDescription>Enter your email and we'll send you a reset link</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="relative">
+                <Input
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  error={errors.email?.message}
+                  {...register('email')}
+                  autoComplete="email"
+                  disabled={isLoading}
+                />
+                <Mail className="absolute right-3 top-[38px] h-5 w-5 text-gray-400" />
+              </div>
+
+              <Button type="submit" className="w-full" isLoading={isLoading}>
+                {isLoading && <Loader2 className="h-4 w-4 mr-2" />}
+                Send Reset Link
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <Link href="/login" className="text-primary-600 hover:underline dark:text-primary-400">
+                Back to Sign In
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
