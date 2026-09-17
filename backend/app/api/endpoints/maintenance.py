@@ -115,10 +115,13 @@ async def create_maintenance_request(
 
     return {"message": "Maintenance request created", "id": maintenance_request.id}
 
+class MaintenanceStatusUpdate(BaseModel):
+    status: str
+
 @router.put("/{request_id}/status")
 async def update_request_status(
     request_id: int,
-    new_status: str = "",
+    status_update: MaintenanceStatusUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -130,7 +133,7 @@ async def update_request_status(
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
 
-    request.status = new_status
+    request.status = status_update.status
     await db.commit()
 
     return {"message": "Status updated"}

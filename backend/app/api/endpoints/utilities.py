@@ -58,6 +58,9 @@ class UtilityProfitSummary(BaseModel):
     total_rent_income: float
     total_water_expense: float
     total_wifi_expense: float
+    # Backward-compat aliases for frontend
+    total_water: float
+    total_wifi: float
     total_utility_expense: float
     net_profit: float
     total_water_units: float
@@ -222,6 +225,8 @@ async def get_utility_profit_summary(
             total_rent_income=float(total_rent),
             total_water_expense=float(total_water),
             total_wifi_expense=float(total_wifi),
+            total_water=float(total_water),
+            total_wifi=float(total_wifi),
             total_utility_expense=float(total_water + total_wifi),
             net_profit=float(total_rent - (total_water + total_wifi)),
             total_water_units=float(total_water_units),
@@ -234,6 +239,83 @@ async def get_utility_profit_summary(
         import logging
         logging.error(f"Error in utility profit summary: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to load profit summary: {str(e)}")
+
+
+@router.get("/statement/{unit_id}", response_model=UtilityStatementResponse)
+async def get_utility_statement(
+    unit_id: int,
+    billing_month: str = Query(..., description="Billing month e.g. '2026-05'"),
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Generate a utility invoice/statement for a specific unit and billing month."""
+    try:
+        from app.models.unit import Unit
+        from app.models.tenant import Tenant
+        from app.models.property import Property
+
+        # Get unit with property
+        result = await db.execute(
+            select(Unit, Property)
+            .join(Property, Unit.property_id == Property.id)
+            .where(Unit.id == unit_id)
+        )
+        unit_prop = result.first()
+        if not unit_prop:
+            raise HTTPException(status_code=404, detail="Unit not found")
+        unit, prop = unit_prop
+
+        # Get tenant for this unit
+        result = await db.execute(
+            select(Tenant).where(Tenant.unit_id == unit_id, Tenant.status == 'active')
+        )
+        tenant = result.scalars().first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="No active tenant in this unit")
+
+        # Get utility charges for this billing month
+        # Note: UtilityCharge is global, not per-unit. We return all charges for the month
+        # and the frontend can display them as the statement
+        result = await db.execute(
+            select(UtilityCharge)
+            .where(
+                UtilityCharge.billing_month == billing_month,
+                UtilityCharge.status != 'deleted'
+            )
+            .order_by(UtilityCharge.utility_type, UtilityCharge.created_at)
+        )
+        charges = result.scalars().all()
+
+        charge_list = []
+        total = 0.0
+        for c in charges:
+            charge_list.append({
+                "id": c.id,
+                "utility_type": c.utility_type,
+                "units_consumed": c.units_consumed,
+                "amount": float(c.amount),
+                "status": c.status,
+                "notes": c.notes,
+            })
+            total += float(c.amount)
+
+        return UtilityStatementResponse(
+            tenant_name=f"{tenant.first_name} {tenant.last_name}",
+            tenant_email=tenant.email,
+            tenant_phone=tenant.phone,
+            property_name=prop.name,
+            unit_number=unit.unit_number,
+            billing_month=billing_month,
+            charges=charge_list,
+            total_amount=total,
+            generated_at=datetime.utcnow()
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logging.error(f"Error generating utility statement: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate statement: {str(e)}")
 
 
 @router.put("/{charge_id}")

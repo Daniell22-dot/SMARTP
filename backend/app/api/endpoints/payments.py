@@ -81,8 +81,9 @@ async def get_recent_payments(
     limit: int = 10
 ):
     result = await db.execute(
-        select(Payment)
+        select(Payment, Tenant, User, Unit)
         .outerjoin(Tenant, Payment.tenant_id == Tenant.id)
+        .outerjoin(User, Tenant.user_id == User.id)
         .outerjoin(Unit, Tenant.unit_id == Unit.id)
         .order_by(desc(Payment.payment_date))
         .limit(limit)
@@ -96,8 +97,9 @@ async def get_recent_payments(
         "payment_method": p.payment_method,
         "status": p.status,
         "receipt_url": p.receipt_url,
-        "property_name": "N/A"
-    } for p in rows]
+        "tenant_name": f"{user.first_name} {user.last_name}" if user else "System/Unknown",
+        "property_name": unit.property_id if unit else "N/A"
+    } for p, tenant, user, unit in rows]
 
 @router.post("/verify-mpesa")
 async def verify_mpesa_payment(
