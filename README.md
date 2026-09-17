@@ -1,120 +1,219 @@
-# Rental Management System
+# Rental Management System (RMS)
 
-A production-ready web application for managing rental properties, tenants, and financial records. Built with a modern backend stack and designed for serverless deployment.
+A production-ready rental property management platform for Kenyan landlords. Built with a modern hybrid architecture: **Next.js 14 frontend** + **FastAPI backend**, deployed on **Vercel** with **Supabase PostgreSQL**.
 
 ## Overview
 
-This system provides a comprehensive platform for landlords and property managers to:
+Complete rental management for single landlords managing multiple properties:
 
-- Manage properties and units.
-- Track tenant registration and lease agreements.
-- Automate rent payment tracking and overdue notifications.
-- Generate financial reports and AI-powered narratives.
-- Dashboard for administrative overview of system metrics.
+- **Tenant Portal** — Self-service: view property, pay rent (M-Pesa QR + verification), report maintenance, messages, documents
+- **Landlord Portal** — Dashboard, tenant management, payments tracking, maintenance, utilities (water/WiFi), financial reports
+- **Admin Portal** — System overview, tenant/property management, finance (KRA tax), system health
 
 ## Technical Stack
 
-### Backend
+### Frontend (Next.js 14)
+- **Framework**: Next.js 14 (App Router) + TypeScript
+- **Styling**: Tailwind CSS + custom design system
+- **State**: Zustand + React Hook Form + Zod validation
+- **Auth**: JWT with HttpOnly cookies, route guards, middleware
+- **UI Components**: Custom accessible components (Button, Card, Modal, Table, Forms)
 
-- Framework: FastAPI
-- ORM: SQLAlchemy (Asynchronous)
-- Database: PostgreSQL (Supabase)
-- Authentication: JWT-based secure auth
-
-### Frontend
-
-- Structure: HTML5
-- Styling: Vanilla CSS (Custom design system)
-- Logic: JavaScript (ES6+)
+### Backend (FastAPI)
+- **Framework**: FastAPI (async) + Python 3.11+
+- **ORM**: SQLAlchemy 2.0 (async) + asyncpg
+- **Database**: PostgreSQL (Supabase, transaction pooler port 6543)
+- **Auth**: JWT (HS256) + bcrypt, rate limiting, secure password reset
+- **Payments**: M-Pesa (Safaricom) QR + manual verification
+- **AI**: DeepSeek for financial narratives
 
 ### Infrastructure
-
-- Deployment: Vercel
-- Database Hosting: Supabase
-- Integration: SMTP for email notifications, M-PESA for payment processing (optional)
+- **Deployment**: Vercel (hybrid: Next.js edge + Python serverless functions)
+- **Database**: Supabase PostgreSQL
+- **Email**: SMTP (Gmail) for notifications/password reset
+- **Security**: CSP, HSTS, X-Frame-Options, robots.txt, sitemap.xml
 
 ## Project Structure
 
 ```text
-├── api/                # Vercel serverless entry points
-├── backend/            # Main application logic
+RMS/
+├── api/                    # Vercel serverless entry point
+│   └── main.py            # Bridges to backend/app/main.py
+├── backend/                # FastAPI application
 │   ├── app/
-│   │   ├── api/        # API endpoints and dependencies
-│   │   ├── core/       # Core config and database engines
-│   │   ├── models/     # SQLAlchemy database models
-│   │   ├── schemas/    # Pydantic validation schemas
-│   │   └── services/   # Business logic (AI, payments)
-├── frontend/           # Static frontend assets (HTML, CSS, JS)
-├── vercel.json         # Vercel routing configuration
-└── requirements.txt    # Python dependencies
+│   │   ├── api/endpoints/ # API routes (auth, users, properties, payments, etc.)
+│   │   ├── core/          # Config, database, security, email
+│   │   ├── models/        # SQLAlchemy models
+│   │   ├── schemas/       # Pydantic schemas
+│   │   ├── services/      # Business logic (AI, payments)
+│   │   └── tasks/         # Background jobs (reminders, backup)
+│   ├── requirements.txt
+│   └── .env               # Local env (gitignored)
+├── frontend/               # Next.js 14 application
+│   ├── src/
+│   │   ├── app/           # App Router pages
+│   │   │   ├── page.tsx           # Landing page
+│   │   │   ├── login/register/    # Auth pages
+│   │   │   ├── dashboard/         # Tenant portal
+│   │   │   ├── my-property/
+│   │   │   ├── payments/          # M-Pesa QR + verify
+│   │   │   ├── maintenance/
+│   │   │   ├── landlord/          # Landlord portal
+│   │   │   │   ├── dashboard/
+│   │   │   │   ├── tenants/
+│   │   │   │   ├── payments/
+│   │   │   │   ├── maintenance/
+│   │   │   │   ├── utilities/
+│   │   │   │   ├── reports/
+│   │   │   │   └── messages/
+│   │   │   └── admin/             # Admin portal
+│   │   │       ├── dashboard/
+│   │   │       ├── tenants/
+│   │   │       ├── properties/
+│   │   │       ├── finance/
+│   │   │       ├── maintenance/
+│   │   │       └── system/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── lib/           # API client, auth storage, utils
+│   │   ├── context/       # React context (Auth)
+│   │   ├── hooks/         # Custom hooks
+│   │   ├── types/         # TypeScript types (matches backend)
+│   │   └── middleware.ts  # Route protection
+│   ├── public/            # manifest.json, favicon, icons
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   └── next.config.js
+├── vercel.json             # Vercel routing (API → Python, Frontend → Next.js)
+├── requirements.txt        # Python dependencies
+└── README.md
 ```
 
-## Local Setup
+## Local Development
 
 ### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL (or use Supabase)
 
-- Python 3.8+
-- PostgreSQL database
+### Backend Setup
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env       # Edit with your Supabase credentials
+uvicorn app.main:app --reload --port 8000
+```
 
-### Installation
+### Frontend Setup
+```bash
+cd frontend
+npm install
+cp .env.example .env.local # Edit NEXT_PUBLIC_API_URL if needed
+npm run dev                # Runs on http://localhost:3000
+```
 
-1. Clone the repository:
+### Environment Variables
 
-   ```bash
-   git clone https://github.com/Daniell22-dot/Rental.git
-   cd RMS
-   ```
+**Backend (`backend/.env`)**:
+```env
+DATABASE_URL=postgresql://user:pass@host:6543/postgres
+SECRET_KEY=your-32-char-secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=480
+DEPLOYMENT_ENV=development
+ADMIN_PORTAL_ACCESS_KEY=your-admin-key
+ADMIN_PORTAL_PASSWORD=your-admin-password
+LANDLORD_PORTAL_ACCESS_KEY=your-landlord-key
+LANDLORD_PORTAL_PASSWORD=your-landlord-password
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASSWORD=your-app-password
+MAIL_FROM=your@gmail.com
+FRONTEND_URL=http://localhost:3000
+MPESA_SHORTCODE=...
+MPESA_PASSKEY=...
+DEEPSEEK_API_KEY=...
+```
 
-2. Create and activate a virtual environment:
+**Frontend (`frontend/.env.local`)**:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
+```
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
+## Security Features
 
-3. Install dependencies:
+- **No backdoor tokens** — removed hardcoded admin/landlord tokens
+- **Privilege escalation fixed** — registration forces `role=tenant`
+- **Security headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- **CORS** — strict allowlist (no `*.vercel.app` wildcard)
+- **robots.txt** — blocks `/admin`, `/landlord`, `/api/`, `/docs`
+- **sitemap.xml** — auto-generated for SEO
+- **Rate limiting** — exponential backoff on auth endpoints
+- **Password reset** — secure token-based flow with email
+- **No default secrets** — fails at startup if `SECRET_KEY` not set
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Deployment (Vercel)
 
-4. Configure environment variables in `backend/.env`:
+### 1. Connect Repository
+Import the repo in Vercel. It will auto-detect the hybrid setup.
 
-   ```text
-   DATABASE_URL=your_postgresql_url
-   SECRET_KEY=your_secret_key
-   ALGORITHM=HS256
-   ```
+### 2. Environment Variables (Vercel Dashboard)
+Set these for the **Python function** (backend):
+```
+DATABASE_URL=postgresql://...
+SECRET_KEY=...
+ADMIN_PORTAL_ACCESS_KEY=...
+ADMIN_PORTAL_PASSWORD=...
+LANDLORD_PORTAL_ACCESS_KEY=...
+LANDLORD_PORTAL_PASSWORD=...
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=...
+SMTP_PASSWORD=...
+MAIL_FROM=...
+MPESA_SHORTCODE=...
+MPESA_PASSKEY=...
+DEEPSEEK_API_KEY=...
+VERCEL=1
+```
 
-5. Run the application:
+Set these for the **Next.js build** (frontend):
+```
+NEXT_PUBLIC_API_URL=https://your-project.vercel.app
+NEXT_PUBLIC_FRONTEND_URL=https://your-project.vercel.app
+```
 
-   ```bash
-   uvicorn backend.app.main:app --reload
-   ```
+### 3. vercel.json Routing
+- `/api/v1/*` → Python serverless function (`api/main.py`)
+- `/api/*` → Python serverless function
+- `/health`, `/robots.txt`, `/sitemap.xml` → Python
+- All other routes → Next.js (edge)
 
-## Deployment to Vercel
+### 4. Database
+Use Supabase with **Transaction Pooler** (port 6543) for serverless compatibility.
 
-The application is specifically optimized for Vercel's serverless environment.
+## API Endpoints
 
-### Optimization Highlights
+Base: `/api/v1`
 
-- Serverless-friendly database pooling (NullPool).
-- Automated routing for static and API assets via `vercel.json`.
-- Compatible with Supabase Transaction Mode pooler (Port 6543).
-
-### Configuration
-
-1. Connect your GitHub repository to Vercel.
-2. Set the following Environment Variables in the Vercel Dashboard:
-   - `DATABASE_URL`: Your Supabase connection string.
-   - `SECRET_KEY`: A secure random string for JWT signatures.
-   - `VERCEL`: Set to `1`.
-
-## Maintenance
-
-To initialize or update the database schema in production, use the provided setup endpoint (with caution):
-`/setup-db`
+| Module | Endpoints |
+|--------|-----------|
+| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/portal-login`, `POST /auth/forgot-password`, `POST /auth/reset-password`, `GET /auth/me` |
+| Users | `GET /users/contacts`, `POST/GET/DELETE /users/profile-photo` |
+| Properties | `GET /properties`, `GET /properties/my` |
+| Tenants | `GET /tenants/available-units`, `POST /tenants/assign-room`, `GET /tenants/my-status` |
+| Payments | `GET /payments/my`, `GET /payments/all`, `GET /payments/recent`, `POST /payments/verify-mpesa` |
+| Maintenance | `GET /maintenance/my`, `GET /maintenance/all`, `POST /maintenance`, `PUT /maintenance/{id}/status` |
+| Utilities | `POST /utilities`, `GET /utilities`, `GET /utilities/profit-summary`, `GET /utilities/statement/{unit_id}`, `PUT/DELETE /utilities/{id}` |
+| Notifications | `GET /notifications`, `POST /notifications`, `PUT /notifications/{id}/read` |
+| Messages | `GET /messages/inbox`, `GET /messages/sent`, `POST /messages`, `PUT/DELETE /messages/{id}` |
+| Documents | `GET /documents/my`, `GET /documents` |
+| Admin | `GET /admin/stats`, `GET /admin/tenants`, `GET /admin/tenants/{id}`, `DELETE /admin/tenants/{id}`, `GET /admin/public-stats` |
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+MIT License — see [LICENSE.md](LICENSE.md)

@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
 
@@ -13,8 +12,7 @@ from app.api.endpoints import (
 from datetime import datetime, timezone
 from app.core.database import engine, Base, AsyncSessionLocal
 from app.config import settings
-from fastapi.responses import FileResponse, RedirectResponse
-import os
+from fastapi.responses import PlainTextResponse
 from app.tasks.scheduler import start_scheduler
 
 # Configure logging
@@ -226,13 +224,9 @@ async def robots_txt():
         "Disallow: /admin\n"
         "Disallow: /landlord\n"
         "Disallow: /api/\n"
-        "Disallow: /frontend/\n"
-        "Disallow: /static/\n"
         "Disallow: /docs\n"
         "Disallow: /redoc\n"
         "Disallow: /openapi.json\n"
-        "Disallow: /admin-login\n"
-        "Disallow: /landlord-login\n"
         "Sitemap: https://tuiyabelong.com/sitemap.xml\n"
     )
     from fastapi.responses import PlainTextResponse
@@ -280,68 +274,9 @@ async def sitemap_xml():
     return PlainTextResponse(content=sitemap_content, media_type="application/xml")
 
 
-@app.get("/{full_path:path}")
-async def serve_frontend(request: Request, full_path: str):
-    """Serve frontend files with portal-aware routing"""
-
-    # Block sensitive admin/landlord frontend files from public serving.
-    # These are internal-only portals reachable through the Next.js app.
-    SENSITIVE_PATHS = {
-        "admin-login.html", "admin.html", "landlord-login.html", "landlord.html",
-        "admin.js", "landlord.js", "admin-login", "landlord-login",
-        "admin", "landlord",
-    }
-    stripped = full_path
-    if stripped.startswith("frontend/"):
-        stripped = stripped[len("frontend/"):]
-    base = stripped.rstrip("/")
-    if base in SENSITIVE_PATHS or any(base.endswith(f"/{s}") for s in SENSITIVE_PATHS):
-        raise HTTPException(status_code=404, detail="Not found")
-
-    # Get the detected portal from middleware
-    portal = getattr(request.state, 'portal', 'tenant')
-    
-    # For root path, serve appropriate login/dashboard based on portal
-    if full_path == '' or full_path == '/':
-        if portal == 'admin':
-            file_path = os.path.join(FRONTEND_DIR, "admin-login.html")
-        elif portal == 'landlord':
-            file_path = os.path.join(FRONTEND_DIR, "landlord-login.html")
-        else:
-            file_path = os.path.join(FRONTEND_DIR, "index.html")
-        
-        if os.path.exists(file_path):
-            logger.info(f"Serving {portal} portal: {file_path}")
-            return FileResponse(file_path)
-    
-    # Strip "frontend/" prefix if present (added by Vercel rewrite /frontend/$1)
-    serve_path = full_path
-    if serve_path.startswith("frontend/"):
-        serve_path = serve_path[len("frontend/"):]
-    
-    STATIC_EXTENSIONS = {'.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
-                         '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map', '.json'}
-    
-    _, ext = os.path.splitext(serve_path)
-    ext = ext.lower()
-    
-    # Try to serve requested file
-    file_path = os.path.join(FRONTEND_DIR, serve_path)
-    
-    # If it's a file that exists, serve it
-    if os.path.isfile(file_path):
-        return FileResponse(file_path)
-    
-    # For static assets that don't exist, return 404 (do NOT fall back to index.html)
-    if ext in STATIC_EXTENSIONS:
-        raise HTTPException(status_code=404, detail=f"Static file not found: {serve_path}")
-    
-    # For HTML page requests (no extension or .html), fall back to index.html (SPA routing)
-    index_path = os.path.join(FRONTEND_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    
-    raise HTTPException(status_code=404, detail="File not found")
+# Note: Frontend is served by Next.js (Vercel edge network).
+# This backend only handles API routes. Static file serving is disabled.
+# If you need to serve built Next.js output from here, mount the .next/static folder.
 
 if __name__ == "__main__":
     import uvicorn
