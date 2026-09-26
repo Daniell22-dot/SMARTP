@@ -88,15 +88,15 @@ export default function MaintenancePage() {
     return variants[priority] || 'default';
   };
 
-  const onSubmit = async (data: MaintenanceForm) => {
+  const onSubmit = async (formData: MaintenanceForm) => {
     setIsSubmitting(true);
     try {
-      await apiClient.post('/maintenance', data);
+      await apiClient.post('/maintenance', formData);
       toast.success('Maintenance request submitted');
       setShowModal(false);
       reset();
-      const data = await apiClient.get<MaintenanceRequest[]>('/maintenance/my?limit=50');
-      setRequests(data);
+      const response = await apiClient.get<MaintenanceRequest[]>('/maintenance/my?limit=50');
+      setRequests(response);
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to submit request');
     } finally {
