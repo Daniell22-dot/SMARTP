@@ -59,7 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     formData.append('username', email);
     formData.append('password', password);
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/login`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+    }
+
+    const response = await fetch(`${apiUrl}/api/v1/auth/login`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
