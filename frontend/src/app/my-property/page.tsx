@@ -53,11 +53,11 @@ export default function MyPropertyPage() {
       try {
         const [propRes, unitRes, leaseRes] = await Promise.all([
           apiClient.get<Property>('/properties/my'),
-          apiClient.get<Unit>('/tenants/my-status').then((r) => r.unit).catch(() => null),
+          apiClient.get<UnitResponse>('/tenants/my-status'),
           apiClient.get<Lease>('/leases/my').catch(() => null),
         ]);
         setProperty(propRes);
-        setUnit(unitRes);
+        setUnit(unitRes?.unit || null);
         setLease(leaseRes);
       } catch (error) {
         console.error('Failed to load property data:', error);
