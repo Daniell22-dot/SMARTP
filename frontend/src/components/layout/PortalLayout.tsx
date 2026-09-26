@@ -17,11 +17,11 @@ export function PortalLayout({ children, navItems, title }: PortalLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Mobile menu overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden animate-fade-in"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
@@ -43,10 +43,10 @@ export function PortalLayout({ children, navItems, title }: PortalLayoutProps) {
       >
         <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
 
-        <main className="p-4 lg:p-6" role="main">
+        <main className="p-4 md:p-6 lg:p-8" role="main">
           {title && (
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-heading-xl font-bold text-spurs-navy dark:text-white">{title}</h1>
             </div>
           )}
           {children}

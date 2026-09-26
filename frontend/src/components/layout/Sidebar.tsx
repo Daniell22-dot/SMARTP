@@ -20,7 +20,7 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-white border-r border-gray-200 transition-all duration-300 dark:bg-gray-800 dark:border-gray-700',
+        'fixed left-0 top-0 z-40 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
         isCollapsed ? 'w-16' : 'w-64',
         className
       )}
@@ -28,18 +28,18 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
     >
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className={cn('flex h-16 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700', isCollapsed && 'justify-center')}>
+        <div className={cn('flex h-16 md:h-20 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700', isCollapsed && 'justify-center')}>
           {!isCollapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center">
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-spurs-navy flex items-center justify-center">
                 <span className="text-white font-bold text-lg">RMS</span>
               </div>
-              <span className="font-semibold text-lg text-gray-900 dark:text-white">Rental RMS</span>
+              <span className="font-bold text-lg text-spurs-navy dark:text-white">Rental RMS</span>
             </Link>
           )}
           {isCollapsed && (
             <Link href="/dashboard" className="flex items-center justify-center">
-              <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-spurs-navy flex items-center justify-center">
                 <span className="text-white font-bold text-lg">RMS</span>
               </div>
             </Link>
@@ -50,7 +50,7 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
               size="icon"
               onClick={onToggle}
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className={cn('h-8 w-8', isCollapsed && 'ml-auto')}
+              className={cn('h-10 w-10', isCollapsed && 'ml-auto')}
             >
               {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
             </Button>
@@ -90,10 +90,10 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
       <div className="space-y-1">
         <button
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
             isActive
-              ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+              ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold border-l-4 border-spurs-navy dark:border-spurs-gold'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
             isCollapsed && 'justify-center px-2'
           )}
           aria-expanded={isActive}
@@ -111,10 +111,10 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
                 key={child.href}
                 href={child.href}
                 className={cn(
-                  'block px-3 py-1.5 rounded-md text-sm transition-colors',
+                  'block px-3 py-2 rounded-md text-sm transition-all duration-200',
                   pathname === child.href
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 font-medium'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                    ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold font-medium'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-spurs-navy dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-spurs-gold'
                 )}
               >
                 {child.label}
@@ -130,10 +130,10 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
     <Link
       href={item.href}
       className={cn(
-        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
         isActive
-          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
-          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+          ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold border-l-4 border-spurs-navy dark:border-spurs-gold'
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
         isCollapsed && 'justify-center px-2'
       )}
       aria-current={isActive ? 'page' : undefined}

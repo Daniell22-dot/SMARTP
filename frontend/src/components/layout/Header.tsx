@@ -12,8 +12,18 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = saved ? saved === 'dark' : prefersDark;
+    setIsDark(dark);
+    if (dark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -27,6 +37,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const toggleTheme = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+    if (newIsDark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  };
 
   const roleLabels: Record<string, string> = {
     tenant: 'Tenant',
@@ -43,8 +61,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-      <div className="flex h-full items-center justify-between px-4">
+    <header className="sticky top-0 z-30 h-16 md:h-20 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+      <div className="flex h-full items-center justify-between px-4 md:px-6">
         {/* Left: Menu button */}
         <div className="flex items-center gap-4">
           {onMenuClick && (
@@ -68,9 +86,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               <Bell className="h-5 w-5" />
             </Button>
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="absolute right-0 mt-2 w-80 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl animate-slide-down">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                  <h3 className="font-semibold text-spurs-navy dark:text-white">Notifications</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   <div className="p-4 text-center text-gray-500 dark:text-gray-400">
@@ -82,9 +100,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           </div>
 
           {/* Theme toggle */}
-          <Button variant="ghost" size="icon" onClick={() => toggleTheme()} aria-label="Toggle theme">
-            <Moon className="h-5 w-5 dark:hidden" />
-            <Sun className="h-5 w-5 hidden dark:block" />
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+            <Moon className="h-5 w-5 hidden dark:block" />
+            <Sun className="h-5 w-5 block dark:hidden" />
           </Button>
 
           {/* User menu */}
@@ -110,9 +128,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </Button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 py-1">
+              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl animate-slide-down py-1">
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                  <p className="font-medium text-gray-900 dark:text-white">
+                  <p className="font-medium text-spurs-navy dark:text-white">
                     {user?.first_name} {user?.last_name}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
@@ -142,23 +160,4 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
     </header>
   );
-}
-
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.classList.toggle('dark');
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-}
-
-function initTheme() {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = saved ? saved === 'dark' : prefersDark;
-    if (isDark) document.documentElement.classList.add('dark');
-  }
-}
-
-if (typeof window !== 'undefined') {
-  initTheme();
 }
