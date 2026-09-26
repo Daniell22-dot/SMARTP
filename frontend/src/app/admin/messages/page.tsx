@@ -32,16 +32,6 @@ interface Conversation {
   unread_count: number;
 }
 
-const formatDateTime = (date: string | Date): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-KE', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export default function AdminMessagesPage() {
   const { user } = useAuth();
@@ -158,12 +148,8 @@ export default function AdminMessagesPage() {
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const filteredConversations = conversations.filter(c => 
