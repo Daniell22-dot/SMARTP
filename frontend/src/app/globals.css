@@ -6,44 +6,32 @@
 
 @layer base {
   :root {
-    /* Tottenham Hotspur Brand Colors */
     --color-spurs-navy: #001C58;
-    --color-spurs-navy-light: #1a2d5e;
-    --color-spurs-navy-lighter: #243b7a;
     --color-spurs-gold: #F0D441;
-    --color-spurs-gold-dark: #e6c300;
-    --color-spurs-gold-light: #ffe352;
     --color-white: #FFFFFF;
-    --color-gray-50: #f8f9fb;
-    --color-gray-100: #f1f3f6;
-    --color-gray-200: #e4e7ec;
-    --color-gray-300: #d0d5dd;
-    --color-gray-400: #98a2b3;
-    --color-gray-500: #667085;
-    --color-gray-600: #475467;
-    --color-gray-700: #344054;
-    --color-gray-800: #1d2939;
-    --color-gray-900: #101828;
+    --color-gray-50: #f8fafc;
+    --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0;
+    --color-gray-300: #cbd5e1;
+    --color-gray-400: #94a3b8;
+    --color-gray-500: #64748b;
+    --color-gray-600: #475569;
+    --color-gray-700: #334155;
+    --color-gray-800: #1e293b;
+    --color-gray-900: #0f172a;
   }
 
   .dark {
-    --color-spurs-navy: #001C58;
-    --color-spurs-navy-light: #1a2d5e;
-    --color-spurs-navy-lighter: #243b7a;
-    --color-spurs-gold: #F0D441;
-    --color-spurs-gold-dark: #e6c300;
-    --color-spurs-gold-light: #ffe352;
-    --color-white: #FFFFFF;
-    --color-gray-50: #101828;
-    --color-gray-100: #1d2939;
-    --color-gray-200: #344054;
-    --color-gray-300: #475467;
-    --color-gray-400: #667085;
-    --color-gray-500: #98a2b3;
-    --color-gray-600: #d0d5dd;
-    --color-gray-700: #e4e7ec;
-    --color-gray-800: #f1f3f6;
-    --color-gray-900: #f8f9fb;
+    --color-gray-50: #0f172a;
+    --color-gray-100: #1e293b;
+    --color-gray-200: #334155;
+    --color-gray-300: #475569;
+    --color-gray-400: #64748b;
+    --color-gray-500: #94a3b8;
+    --color-gray-600: #cbd5e1;
+    --color-gray-700: #e2e8f0;
+    --color-gray-800: #f1f5f9;
+    --color-gray-900: #f8fafc;
   }
 }
 
@@ -59,11 +47,10 @@
   }
 
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans antialiased;
+    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -81,38 +68,34 @@
     @apply bg-gray-400 dark:bg-gray-500;
   }
 
-  /* Focus styles */
   *:focus-visible {
     @apply outline-none ring-2 ring-spurs-gold ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
   }
 
-  /* Selection */
   ::selection {
     @apply bg-spurs-gold/30 text-spurs-navy;
   }
 }
 
 @layer components {
-  /* Spurs Button Variants */
+  /* Clean, flat buttons - no shadows, no glass */
   .btn {
-    @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-out-expo 
+    @apply inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 ease-out
            focus:outline-none focus:ring-2 focus:ring-spurs-gold focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900
            disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-primary {
-    @apply btn bg-spurs-navy text-white hover:bg-spurs-navy-light active:bg-spurs-navy-lighter
-           shadow-sm hover:shadow-md;
+    @apply btn bg-spurs-navy text-white hover:bg-spurs-navy/90 active:bg-spurs-navy/80;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-spurs-navy border-2 border-spurs-navy hover:bg-spurs-navy/5 
+    @apply btn bg-white text-spurs-navy border border-spurs-navy hover:bg-spurs-navy/5
            active:bg-spurs-navy/10 dark:bg-gray-800 dark:border-spurs-gold dark:text-spurs-gold;
   }
 
   .btn-gold {
-    @apply btn bg-spurs-gold text-spurs-navy hover:bg-spurs-gold-dark active:bg-spurs-gold-light
-           shadow-sm hover:shadow-gold font-semibold;
+    @apply btn bg-spurs-gold text-spurs-navy hover:bg-spurs-gold/90 active:bg-spurs-gold/80 font-semibold;
   }
 
   .btn-ghost {
@@ -120,11 +103,11 @@
   }
 
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm hover:shadow-md;
+    @apply btn bg-red-600 text-white hover:bg-red-700 active:bg-red-800;
   }
 
   .btn-outline {
-    @apply btn border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 
+    @apply btn border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300
            hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700;
   }
 
@@ -134,36 +117,35 @@
   .btn-xl { @apply px-8 py-4 text-lg; }
   .btn-icon { @apply p-2; }
 
-  /* Spurs Card */
+  /* Flat cards - no shadows, no glass, subtle border */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700
-           shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700;
   }
 
   .card-hover {
-    @apply card hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
+    @apply card hover:border-spurs-gold/50 dark:hover:border-spurs-gold/50 transition-colors;
   }
 
   .card-header {
-    @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700;
+    @apply px-5 py-4 border-b border-gray-200 dark:border-gray-700;
   }
 
   .card-body {
-    @apply p-6;
+    @apply p-5;
   }
 
   .card-footer {
-    @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl;
+    @apply px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg;
   }
 
-  /* Spurs Input */
+  /* Clean inputs - flat, no shadows */
   .input {
     @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600
            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
            placeholder:text-gray-400 dark:placeholder:text-gray-500
            focus:outline-none focus:ring-2 focus:ring-spurs-gold focus:border-transparent
            disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-700
-           transition-all duration-200;
+           transition-colors duration-150;
   }
 
   .input-error {
@@ -182,21 +164,21 @@
     @apply mt-1.5 text-sm text-red-600 dark:text-red-400;
   }
 
-  /* Spurs Badge */
+  /* Clean badges */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-primary { @apply badge bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold; }
-  .badge-gold { @apply badge bg-spurs-gold/10 text-spurs-gold-dark dark:bg-spurs-gold/20; }
+  .badge-gold { @apply badge bg-spurs-gold/10 text-spurs-gold dark:bg-spurs-gold/20; }
   .badge-success { @apply badge bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400; }
   .badge-warning { @apply badge bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400; }
   .badge-danger { @apply badge bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400; }
   .badge-neutral { @apply badge bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300; }
 
-  /* Spurs Table */
+  /* Clean tables */
   .table-container {
-    @apply overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700;
+    @apply overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700;
   }
 
   .table {
@@ -220,24 +202,23 @@
     @apply border-b-0;
   }
 
-  /* Spurs Modal */
+  /* Clean modals - flat, no glass */
   .modal-overlay {
-    @apply fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-fade-in;
+    @apply fixed inset-0 z-50 bg-black/50;
   }
 
   .modal {
-    @apply fixed z-50 w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl
-           animate-slide-up border border-gray-200 dark:border-gray-700;
+    @apply fixed z-50 w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-lg
+           border border-gray-200 dark:border-gray-700;
   }
 
   .modal-sm { @apply modal max-w-md; }
   .modal-lg { @apply modal max-w-2xl; }
   .modal-xl { @apply modal max-w-4xl; }
 
-  /* Spurs Dropdown */
+  /* Clean dropdowns */
   .dropdown {
-    @apply absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700
-           animate-slide-down py-1 z-50;
+    @apply absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50;
   }
 
   .dropdown-item {
@@ -245,9 +226,9 @@
            flex items-center gap-2 transition-colors;
   }
 
-  /* Spurs Avatar */
+  /* Clean avatars */
   .avatar {
-    @apply inline-flex items-center justify-center rounded-full bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold font-medium;
+    @apply inline-flex items-center justify-center rounded-full bg-spurs-navy/10 dark:bg-spurs-navy/20 text-spurs-navy dark:text-spurs-gold font-medium;
   }
 
   .avatar-sm { @apply avatar h-8 w-8 text-xs; }
@@ -255,9 +236,9 @@
   .avatar-lg { @apply avatar h-12 w-12 text-base; }
   .avatar-xl { @apply avatar h-16 w-16 text-lg; }
 
-  /* Spurs Sidebar Link */
+  /* Clean sidebar links */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150
            text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800
            hover:text-spurs-navy dark:hover:text-spurs-gold;
   }
@@ -267,9 +248,9 @@
            border-l-4 border-spurs-navy dark:border-spurs-gold;
   }
 
-  /* Spurs Stats Card */
+  /* Clean stat cards */
   .stat-card {
-    @apply card p-6;
+    @apply card p-5;
   }
 
   .stat-value {
@@ -281,25 +262,25 @@
   }
 
   .stat-icon {
-    @apply w-12 h-12 rounded-xl flex items-center justify-center text-xl;
+    @apply w-10 h-10 rounded-lg flex items-center justify-center text-xl;
   }
 
-  /* Spurs Page Header */
+  /* Page headers */
   .page-header {
-    @apply mb-8;
+    @apply mb-6;
   }
 
   .page-title {
-    @apply text-display-md text-spurs-navy dark:text-white font-bold;
+    @apply text-heading-xl font-bold text-spurs-navy dark:text-white;
   }
 
   .page-subtitle {
     @apply text-body-lg text-gray-500 dark:text-gray-400 mt-2;
   }
 
-  /* Spurs Alert */
+  /* Clean alerts */
   .alert {
-    @apply p-4 rounded-xl border flex items-start gap-3;
+    @apply p-4 rounded-lg border flex items-start gap-3;
   }
 
   .alert-info {
@@ -318,67 +299,57 @@
     @apply alert bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300;
   }
 
-  /* Spurs Tabs */
+  /* Clean tabs */
   .tabs {
     @apply flex border-b border-gray-200 dark:border-gray-700;
   }
 
   .tab {
     @apply px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-spurs-navy dark:hover:text-spurs-gold
-           border-b-2 border-transparent transition-all duration-200 -mb-px;
+           border-b-2 border-transparent transition-colors duration-150 -mb-px;
   }
 
   .tab-active {
-    @apply tab text-spurs-navy dark:text-spurs-gold border-spurs-navy dark:border-spurs-gold;
+    @apply tab text-spurs-navy dark:text-spurs-gold border-spurs-gold;
   }
 
-  /* Spurs Tooltip */
-  .tooltip {
-    @apply absolute z-50 px-3 py-2 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg
-           animate-fade-in whitespace-nowrap;
-  }
-
-  .tooltip-arrow {
-    @apply absolute w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45;
-  }
-
-  /* Spurs Form Group */
+  /* Clean form groups */
   .form-group {
     @apply space-y-1.5;
   }
 
-  /* Spurs Section */
+  /* Sections */
   .section {
-    @apply py-12 md:py-16 lg:py-20;
+    @apply py-10 md:py-14 lg:py-16;
   }
 
   .section-sm {
-    @apply py-8 md:py-10 lg:py-12;
+    @apply py-6 md:py-8 lg:py-10;
   }
 
-  /* Spurs Container */
+  /* Containers */
   .container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* Spurs Grid */
+  /* Grids */
   .grid-auto {
-    @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+    @apply grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
   }
 
   .grid-2 {
-    @apply grid gap-6 md:grid-cols-2;
+    @apply grid gap-5 md:grid-cols-2;
   }
 
   .grid-3 {
-    @apply grid gap-6 md:grid-cols-3;
+    @apply grid gap-5 md:grid-cols-3;
   }
 
   .grid-4 {
-    @apply grid gap-6 md:grid-cols-2 lg:grid-cols-4;
+    @apply grid gap-5 md:grid-cols-2 lg:grid-cols-4;
   }
 
-  /* Spurs Divider */
+  /* Dividers */
   .divider {
     @apply border-t border-gray-200 dark:border-gray-700;
   }
@@ -389,43 +360,30 @@
 }
 
 @layer utilities {
-  /* Text Gradient */
+  /* Text gradients */
   .text-gradient {
     @apply bg-gradient-to-r from-spurs-navy via-spurs-navy/80 to-spurs-gold bg-clip-text text-transparent;
   }
 
   .text-gradient-gold {
-    @apply bg-gradient-to-r from-spurs-gold to-spurs-gold-dark bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-spurs-gold to-spurs-gold/80 bg-clip-text text-transparent;
   }
 
-  /* Glass Effect */
-  .glass {
-    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg;
-  }
-
-  .glass-strong {
-    @apply bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl;
-  }
-
-  /* Animation */
+  /* Clean animations */
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.2s ease-out;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.2s ease-out;
   }
 
   .animate-slide-down {
-    animation: slideDown 0.3s ease-out;
+    animation: slideDown 0.2s ease-out;
   }
 
   .animate-scale-in {
-    animation: scaleIn 0.2s ease-out;
-  }
-
-  .animate-spin-slow {
-    animation: spin 3s linear infinite;
+    animation: scaleIn 0.15s ease-out;
   }
 
   @keyframes fadeIn {
@@ -434,17 +392,17 @@
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
+    from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
+    from { opacity: 0; transform: scale(0.98); }
     to { opacity: 1; transform: scale(1); }
   }
 

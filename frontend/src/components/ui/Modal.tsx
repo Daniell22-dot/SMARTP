@@ -29,14 +29,14 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
   return (
     <Fragment>
       <div
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-50 bg-black/50"
         onClick={onClose}
         aria-hidden="true"
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
           className={cn(
-            'w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl animate-scale-in border border-gray-200 dark:border-gray-700',
+            'w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700',
             sizes[size]
           )}
           role="dialog"
@@ -48,7 +48,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
             <div className="flex items-start justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <div>
                 {title && (
-                  <h2 id="modal-title" className="text-heading-md font-bold text-spurs-navy dark:text-white">
+                  <h2 id="modal-title" className="text-heading-lg font-semibold text-spurs-navy dark:text-white">
                     {title}
                   </h2>
                 )}
@@ -71,7 +71,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
               )}
             </div>
           )}
-          <div className="p-6">{children}</div>
+          <div className="p-5">{children}</div>
         </div>
       </div>
     </Fragment>
@@ -93,7 +93,7 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', cancelText = 'Cancel', variant = 'danger', isLoading }: ConfirmDialogProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+      <p className="text-gray-600 dark:text-gray-400 mb-5">{message}</p>
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={onClose} disabled={isLoading}>
           {cancelText}

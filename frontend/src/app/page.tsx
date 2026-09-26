@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -86,11 +88,11 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-gray-200 dark:border-gray-700">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="container">
           <div className="flex items-center justify-between h-16 md:h-20">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-spurs-navy flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-spurs-navy flex items-center justify-center">
                 <span className="text-white font-bold text-xl">RMS</span>
               </div>
               <span className="font-bold text-xl text-spurs-navy dark:text-white hidden sm:block">Rental Management System</span>
@@ -109,7 +111,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button className="bg-spurs-gold text-spurs-navy hover:bg-spurs-gold-dark" size="md">
+                  <Button className="bg-spurs-gold text-spurs-navy hover:bg-spurs-gold/90" size="md">
                     Get Started Free
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -120,14 +122,11 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-spurs-navy/5 via-white to-transparent dark:from-spurs-navy/10 dark:to-gray-900" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-        
-        <div className="container relative">
+      {/* Hero Section - Clean, no grid pattern */}
+      <section className="pt-32 pb-20 md:pt-40 md:pb-32">
+        <div className="container">
           <div className="text-center max-w-4xl mx-auto">
-            <Badge className="mb-6 inline-flex items-center gap-2 bg-spurs-gold/10 text-spurs-gold-dark border-spurs-gold/20 px-4 py-2">
+            <Badge className="mb-6 inline-flex items-center gap-2 bg-spurs-gold/10 text-spurs-gold border-spurs-gold/20 px-4 py-2">
               <Trophy className="h-4 w-4" />
               <span className="font-semibold">Built for Kenyan Landlords</span>
             </Badge>
@@ -142,7 +141,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
-                <Button size="lg" className="bg-spurs-gold text-spurs-navy hover:bg-spurs-gold-dark gap-2 px-8 py-3">
+                <Button size="lg" className="bg-spurs-gold text-spurs-navy hover:bg-spurs-gold/90 gap-2 px-8 py-3">
                   Start Free Trial
                   <ArrowRight className="h-5 w-5" />
                 </Button>
@@ -190,10 +189,10 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {features.map((feature) => (
               <Card key={feature.title} className="h-full card-hover p-6">
-                <div className="w-14 h-14 rounded-xl bg-spurs-navy/10 dark:bg-spurs-navy/20 flex items-center justify-center mb-6">
+                <div className="w-12 h-12 rounded-lg bg-spurs-navy/10 dark:bg-spurs-navy/20 flex items-center justify-center mb-6">
                   <feature.icon className="h-7 w-7 text-spurs-navy dark:text-spurs-gold" />
                 </div>
-                <h3 className="text-heading-md font-bold text-spurs-navy dark:text-white mb-3">{feature.title}</h3>
+                <h3 className="text-heading-lg font-bold text-spurs-navy dark:text-white mb-3">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{feature.description}</p>
               </Card>
             ))}
@@ -202,7 +201,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="section bg-gray-50 dark:bg-gray-900/50">
+      <section id="how-it-works" className="section bg-gray-50 dark:bg-gray-800/50">
         <div className="container">
           <div className="text-center mb-16">
             <h2 className="text-display-md font-bold text-spurs-navy dark:text-white mb-4">
@@ -217,11 +216,11 @@ export default function LandingPage() {
               { step: '03', title: 'Manage & Grow', description: 'Collect payments, handle maintenance, generate reports, and scale your rental business.', icon: BarChart3 },
             ].map((item, index) => (
               <Card key={item.step} className="relative p-8 card-hover">
-                <div className="absolute -top-4 left-8 w-10 h-10 rounded-full bg-spurs-gold text-spurs-navy flex items-center justify-center font-bold text-xl">
+                <div className="absolute -top-3 left-8 w-8 h-8 rounded-full bg-spurs-gold text-spurs-navy flex items-center justify-center font-bold text-lg">
                   {item.step}
                 </div>
-                <div className="pt-4">
-                  <div className="w-14 h-14 rounded-xl bg-spurs-navy/10 dark:bg-spurs-navy/20 flex items-center justify-center mb-6">
+                <div className="pt-3">
+                  <div className="w-12 h-12 rounded-lg bg-spurs-navy/10 dark:bg-spurs-navy/20 flex items-center justify-center mb-6">
                     <item.icon className="h-7 w-7 text-spurs-navy dark:text-spurs-gold" />
                   </div>
                   <h3 className="text-heading-lg font-bold text-spurs-navy dark:text-white mb-3">{item.title}</h3>
@@ -267,9 +266,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section bg-spurs-navy dark:bg-spurs-navy relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="container relative text-center">
+      <section className="section bg-spurs-navy dark:bg-spurs-navy">
+        <div className="container text-center">
           <h2 className="text-display-md md:text-display-lg font-bold text-white mb-4">
             Ready to Simplify Your Rental Management?
           </h2>
@@ -298,8 +296,8 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2">
               <Link href="/" className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-xl bg-spurs-gold flex items-center justify-center">
-                  <span className="text-spurs-navy font-bold text-2xl">RMS</span>
+                <div className="w-10 h-10 rounded-lg bg-spurs-gold flex items-center justify-center">
+                  <span className="text-spurs-navy font-bold text-xl">RMS</span>
                 </div>
                 <span className="font-bold text-xl text-white">Rental Management System</span>
               </Link>
