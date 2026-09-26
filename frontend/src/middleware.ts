@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from '@/lib/auth-storage';
 
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/'];
 const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = getToken();
+  // Read token from cookie (works in Edge runtime middleware)
+  const token = request.cookies.get('rms_token')?.value;
 
   // Allow public paths
   if (publicPaths.some((path) => pathname === path || pathname.startsWith(path + '/'))) {

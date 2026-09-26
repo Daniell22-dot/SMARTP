@@ -338,6 +338,63 @@ async def portal_login(request: Request, req: PortalLoginRequest):
             detail="Invalid portal. Must be 'admin' or 'landlord'",
         )
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    new_password: str
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    req: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Request a password reset. In production this sends an email with a reset link."""
+    client_ip = get_client_ip(request)
+    if not login_limiter.check_rate_limit(client_ip, limit=5, window=3600):
+        raise HTTPException(status_code=429, detail="Too many reset requests. Please try again in a few minutes.")
+
+    normalized_email = str(req.email).strip().lower()
+    result = await db.execute(select(User).filter(User.email == normalized_email))
+    user = result.scalars().first()
+
+    # Always return the same message to avoid user enumeration
+    if not user:
+        return {"message": "If an account exists for this email, a reset link has been sent."}
+
+    # Generate a secure random token, store only its hash
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    reset = PasswordResetToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+        is_used=False
+    )
+    db.add(reset)
+    await db.commit()
+
+    # In production, send an email with a link like:
+    #   https://tuiyabelong.com/reset-password?token=<token>&email=<email>
+    # For now, log the reset URL (dev convenience).
+    logger.info(f"Password reset requested for {normalized_email}. Token (dev only): {token}")
+    try:
+        from app.core.email import send_email
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={normalized_email}"
+        await send_email(
+            to_email=normalized_email,
+            subject="Password Reset",
+            body=f"Click this link to reset your password: {reset_link}"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send reset email: {e}")
+
+    return {"message": "If an account exists for this email, a reset link has been sent."}
+
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
