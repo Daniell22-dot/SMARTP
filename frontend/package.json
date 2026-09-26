@@ -38,5 +38,8 @@
     "eslint-config-next": "14.2.15",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
   }
 }
