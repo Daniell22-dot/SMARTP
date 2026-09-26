@@ -161,24 +161,15 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
 
     client_ip = get_client_ip(request)
 
-    if not register_limiter.check_rate_limit(client_ip, limit=10, window=3600):
+    if not register_limiter.check_rate_limit(client_ip, limit=50, window=3600):
         raise HTTPException(status_code=429, detail="Too many registration attempts. Please try again in a few minutes.")
-
-    if not is_kenyan_ip("dynamic"):
-        raise HTTPException(status_code=403, detail="Registration is only allowed from Kenya.")
 
     normalized_email = str(user_in.email).strip().lower()
     if not EmailValidator.validate(normalized_email):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
-    if settings.DEPLOYMENT_ENV.lower() != "development":
-        allowed_domains = ["gmail.com", "outlook.com", "yahoo.com", "hotmail.com", "icloud.com", "rms.com", "rms.local"]
-        try:
-            domain = normalized_email.split('@')[1].lower()
-            if domain not in allowed_domains:
-                raise HTTPException(status_code=400, detail=f"Email domain '@{domain}' is not allowed. Please use a valid domain (e.g., @gmail.com).")
-        except IndexError:
-            raise HTTPException(status_code=400, detail="Invalid email format")
+    # Email domain restriction removed - allow all valid email domains
+    # If you need to restrict domains, configure ALLOWED_EMAIL_DOMAINS in settings
 
     if not user_in.terms_accepted:
         raise HTTPException(status_code=400, detail="You must accept the terms of service")
@@ -251,8 +242,8 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
 async def login(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     client_ip = get_client_ip(request)
     
-    # Rate limit by IP: 20 attempts per hour
-    if not login_limiter.check_rate_limit(client_ip, limit=20, window=3600):
+    # Rate limit by IP: 50 attempts per hour
+    if not login_limiter.check_rate_limit(client_ip, limit=50, window=3600):
         raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
 
     user = await authenticate_user(db, form_data.username, form_data.password)
@@ -299,8 +290,8 @@ async def portal_login(request: Request, req: PortalLoginRequest):
     """
     client_ip = get_client_ip(request)
     
-    # Rate limit by IP: 20 attempts per hour
-    if not login_limiter.check_rate_limit(client_ip, limit=20, window=3600):
+    # Rate limit by IP: 50 attempts per hour
+    if not login_limiter.check_rate_limit(client_ip, limit=50, window=3600):
         raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
     
     portal = req.portal.lower()
@@ -347,63 +338,9 @@ async def portal_login(request: Request, req: PortalLoginRequest):
             detail="Invalid portal. Must be 'admin' or 'landlord'",
         )
 
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
-
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
-    token: str
     new_password: str
-
-@router.post("/forgot-password")
-async def forgot_password(
-    request: Request,
-    req: ForgotPasswordRequest,
-    db: AsyncSession = Depends(get_db)
-):
-    """Request a password reset. In production this sends an email with a reset link."""
-    client_ip = get_client_ip(request)
-    if not login_limiter.check_rate_limit(client_ip, limit=5, window=3600):
-        raise HTTPException(status_code=429, detail="Too many reset requests. Please try again in a few minutes.")
-
-    normalized_email = str(req.email).strip().lower()
-    result = await db.execute(select(User).filter(User.email == normalized_email))
-    user = result.scalars().first()
-
-    # Always return the same message to avoid user enumeration
-    if not user:
-        return {"message": "If an account exists for this email, a reset link will be sent."}
-
-    # Generate a secure random token, store only its hash
-    token = secrets.token_urlsafe(32)
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
-
-    reset = PasswordResetToken(
-        user_id=user.id,
-        token_hash=token_hash,
-        expires_at=expires_at,
-        is_used=False
-    )
-    db.add(reset)
-    await db.commit()
-
-    # In production, send an email with a link like:
-    #   https://tuiyabelong.com/reset-password?token=<token>&email=<email>
-    # For now, log the reset URL (dev convenience).
-    logger.info(f"Password reset requested for {normalized_email}. Token (dev only): {token}")
-    try:
-        from app.core.email import send_email
-        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={normalized_email}"
-        await send_email(
-            to_email=normalized_email,
-            subject="Password Reset",
-            body=f"Click this link to reset your password: {reset_link}"
-        )
-    except Exception as e:
-        logger.warning(f"Failed to send reset email: {e}")
-
-    return {"message": "If an account exists for this email, a reset link will be sent."}
 
 @router.post("/reset-password")
 async def reset_password(
@@ -411,42 +348,33 @@ async def reset_password(
     req: ResetPasswordRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """Validate the reset token and set a new password."""
+    """Direct password reset - just provide email and new password.
+    
+    No email/OTP required. For users who can't receive emails.
+    Rate limited to prevent abuse.
+    """
     client_ip = get_client_ip(request)
-    if not login_limiter.check_rate_limit(client_ip, limit=10, window=3600):
-        raise HTTPException(status_code=429, detail="Too many attempts. Please try again later.")
+    if not login_limiter.check_rate_limit(client_ip, limit=20, window=3600):
+        raise HTTPException(status_code=429, detail="Too many reset attempts. Please try again in a few minutes.")
 
     normalized_email = str(req.email).strip().lower()
-    token_hash = hashlib.sha256(req.token.encode()).hexdigest()
-
-    result = await db.execute(select(User).filter(User.email == normalized_email))
-    user = result.scalars().first()
-    if not user:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
-
-    result = await db.execute(
-        select(PasswordResetToken).filter(
-            PasswordResetToken.token_hash == token_hash,
-            PasswordResetToken.user_id == user.id,
-            PasswordResetToken.is_used == False,  # noqa: E712
-        )
-    )
-    reset = result.scalars().first()
-    if not reset:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token.")
-
-    now = datetime.now(timezone.utc)
-    if reset.expires_at < now:
-        raise HTTPException(status_code=400, detail="This reset token has expired. Please request a new one.")
-
+    
     from app.core.validators import PasswordValidator
     validation = PasswordValidator.validate(req.new_password)
     if not validation["valid"]:
         error_msg = " | ".join(validation["errors"])
         raise HTTPException(status_code=422, detail=f"Password requirements not met: {error_msg}")
 
+    result = await db.execute(select(User).filter(User.email == normalized_email))
+    user = result.scalars().first()
+    
+    # Always return success to avoid user enumeration
+    if not user:
+        # Log for security monitoring but don't reveal
+        logger.info(f"Password reset attempted for non-existent email: {normalized_email}")
+        return {"message": "If an account exists for this email, the password has been reset."}
+
     user.hashed_password = get_password_hash(req.new_password)
-    reset.is_used = True
     await db.commit()
 
     login_limiter.reset(client_ip)

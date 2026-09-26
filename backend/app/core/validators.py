@@ -23,7 +23,7 @@ class PasswordValidator:
         if len(password) > PasswordValidator.MAX_LENGTH:
             errors.append(f"Password cannot exceed {PasswordValidator.MAX_LENGTH} characters (bcrypt limit)")
         
-        # Check complexity
+        # Check complexity - relaxed for better UX
         if not re.search(r'[A-Z]', password):
             errors.append("Password must contain at least one uppercase letter")
         
@@ -33,8 +33,7 @@ class PasswordValidator:
         if not re.search(r'[0-9]', password):
             errors.append("Password must contain at least one number")
         
-        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};:\'",.<>?/\\|`~]', password):
-            errors.append("Password must contain at least one special character (!@#$%^&*)")
+        # Special character is optional for better UX (frontend doesn't enforce it)
         
         return {
             "valid": len(errors) == 0,
@@ -68,8 +67,8 @@ class EmailValidator:
 class PhoneValidator:
     """Validate phone numbers (Kenya focus)"""
     
-    # Kenya phone pattern: +254... or 0... or just 7 digits for shortcode
-    KENYA_PATTERN = r'^(\+254|0|254)?([1-9]\d{7,8})$'
+    # Kenya phone pattern: 07XXXXXXXX, 01XXXXXXXX, +2547XXXXXXXX, +2541XXXXXXXX, 2547XXXXXXXX
+    KENYA_PATTERN = r'^(\+254|0|254)?([17]\d{8})$'
     
     @staticmethod
     def validate(phone: str) -> bool:
