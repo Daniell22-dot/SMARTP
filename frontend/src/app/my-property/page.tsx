@@ -28,6 +28,10 @@ interface Unit {
   is_occupied: boolean;
 }
 
+interface UnitResponse {
+  unit: Unit | null;
+}
+
 interface Lease {
   id: number;
   start_date: string;

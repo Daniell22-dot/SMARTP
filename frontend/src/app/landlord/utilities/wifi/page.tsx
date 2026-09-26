@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiClient } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Wifi, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

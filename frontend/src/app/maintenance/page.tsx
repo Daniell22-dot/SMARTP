@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Input, Select, Textarea } from '@/components/ui/Input';
 import { formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api';
 import { useState, useEffect } from 'react';
