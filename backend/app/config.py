@@ -33,10 +33,11 @@ class Settings(BaseSettings):
     PUBLIC_BASE_URL: Optional[str] = os.getenv("PUBLIC_BASE_URL")
 
     # Frontend URL (used for password reset links)
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://tuiyabelong.com")
 
     BACKEND_CORS_ORIGINS: List[str] = [
         "https://tuiyabelong.vercel.app",
+        "https://rental-sigma-five.vercel.app",
         "https://tuiyabelong.com",
         "https://www.tuiyabelong.com",
         "http://localhost:3000",
@@ -52,6 +53,8 @@ class Settings(BaseSettings):
         # Vercel preview deployments
         "https://tuiyabelong-git-main.vercel.app",
         "https://tuiyabelong-git-develop.vercel.app",
+        "https://rental-sigma-five-git-main.vercel.app",
+        "https://rental-sigma-five-git-develop.vercel.app",
     ]
 
     # Database
