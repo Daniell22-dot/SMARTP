@@ -139,6 +139,11 @@ export const adminNavItems: NavItem[] = [
     icon: <Wrench className="h-5 w-5" />,
   },
   {
+    href: '/admin/messages',
+    label: 'Messages',
+    icon: <MessageSquare className="h-5 w-5" />,
+  },
+  {
     href: '/admin/system',
     label: 'System',
     icon: <Activity className="h-5 w-5" />,
