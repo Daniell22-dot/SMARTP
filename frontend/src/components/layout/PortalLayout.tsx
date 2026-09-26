@@ -21,7 +21,7 @@ export function PortalLayout({ children, navItems, title }: PortalLayoutProps) {
       {/* Mobile menu overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden animate-fade-in"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />

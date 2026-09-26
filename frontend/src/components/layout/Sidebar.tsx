@@ -31,7 +31,7 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
         <div className={cn('flex h-16 md:h-20 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700', isCollapsed && 'justify-center')}>
           {!isCollapsed && (
             <Link href="/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-spurs-navy flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-spurs-navy flex items-center justify-center">
                 <span className="text-white font-bold text-lg">RMS</span>
               </div>
               <span className="font-bold text-lg text-spurs-navy dark:text-white">Rental RMS</span>
@@ -39,7 +39,7 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
           )}
           {isCollapsed && (
             <Link href="/dashboard" className="flex items-center justify-center">
-              <div className="w-10 h-10 rounded-xl bg-spurs-navy flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-spurs-navy flex items-center justify-center">
                 <span className="text-white font-bold text-lg">RMS</span>
               </div>
             </Link>
@@ -90,7 +90,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
       <div className="space-y-1">
         <button
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
             isActive
               ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold border-l-4 border-spurs-navy dark:border-spurs-gold'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
@@ -111,7 +111,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
                 key={child.href}
                 href={child.href}
                 className={cn(
-                  'block px-3 py-2 rounded-md text-sm transition-all duration-200',
+                  'block px-3 py-2 rounded-md text-sm transition-colors duration-150',
                   pathname === child.href
                     ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold font-medium'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-spurs-navy dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-spurs-gold'
@@ -130,7 +130,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
     <Link
       href={item.href}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
         isActive
           ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold border-l-4 border-spurs-navy dark:border-spurs-gold'
           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
