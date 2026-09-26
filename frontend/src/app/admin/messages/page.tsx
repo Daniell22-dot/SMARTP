@@ -278,7 +278,7 @@ export default function AdminMessagesPage() {
 
         <div className="flex-1 flex flex-col min-w-0">
           {selectedConversation ? (
-            <>
+            <div>
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
                 <Avatar size="lg" name={`${selectedConversation.other_user.first_name} ${selectedConversation.other_user.last_name}`} />
                 <div className="flex-1 min-w-0">
@@ -296,27 +296,30 @@ export default function AdminMessagesPage() {
                     <p>No messages yet. Start the conversation!</p>
                   </div>
                 ) : (
-                  messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
-                    >
+                  <div>
+                    {messages.map((msg) => (
                       <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                          msg.sender_id === user?.id
-                            ? 'bg-spurs-navy text-white rounded-tr-sm'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-tl-sm'
-                        }`}
+                        key={msg.id}
+                        className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
-                        <p className={`text-xs mt-1 opacity-70 ${msg.sender_id === user?.id ? 'text-right' : 'text-left'}`}>
-                          {formatDateTime(msg.created_at)}
-                          {msg.sender_id === user?.id && msg.is_read && (
-                            <CheckCircle className="inline h-3 w-3 ml-1 text-spurs-gold" />
-                          )}
-                        </p>
+                        <div
+                          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                            msg.sender_id === user?.id
+                              ? 'bg-spurs-navy text-white rounded-tr-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-tl-sm'
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
+                          <p className={`text-xs mt-1 opacity-70 ${msg.sender_id === user?.id ? 'text-right' : 'text-left'}`}>
+                            {formatDateTime(msg.created_at)}
+                            {msg.sender_id === user?.id && msg.is_read && (
+                              <CheckCircle className="inline h-3 w-3 ml-1 text-spurs-gold" />
+                            )}
+                          </p>
+                        </div>
                       </div>
                     ))}
+                  </div>
                 )}
               </div>
 
@@ -335,7 +338,7 @@ export default function AdminMessagesPage() {
                   </Button>
                 </form>
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
               <MessageSquare className="h-24 w-24 mb-4 text-gray-300 dark:text-gray-600" />
