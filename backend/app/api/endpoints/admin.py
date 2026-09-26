@@ -13,7 +13,7 @@ from app.models.property import Property
 from app.models.unit import Unit
 from app.models.maintenance import MaintenanceRequest
 from app.api.endpoints.auth import get_current_user
-from app.api.endpoints.dependencies import get_current_admin, get_current_owner
+from app.api.endpoints.dependencies import get_current_admin, get_current_owner, get_current_caretaker
 from pydantic import BaseModel, Field
 
 router = APIRouter()
@@ -795,8 +795,8 @@ async def get_caretaker_tenants(
         .outerjoin(Payment, Tenant.id == Payment.tenant_id)\
         .where(User.role == UserRole.TENANT)\
         .group_by(User.id, User.first_name, User.last_name, User.email, User.phone,
-                  Property.name, Unit.unit_number, Unit.monthly_rent, Tenant.status, Tenant.id)
-        .order_by(User.last_name, User.first_name)
+                  Property.name, Unit.unit_number, Unit.monthly_rent, Tenant.status, Tenant.id)\
+        .order_by(User.last_name, User.first_name)\
         .offset(skip).limit(limit)
     
     if status_filter:
