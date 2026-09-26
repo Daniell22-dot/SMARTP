@@ -16,8 +16,6 @@ import { MessageSquare, Send, Search, X, ChevronLeft, Paperclip, Loader2, Bell, 
 import { Contact, Message } from '@/types';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 
 const messageSchema = z.object({
   recipient_id: z.number().min(1, 'Please select a recipient'),
