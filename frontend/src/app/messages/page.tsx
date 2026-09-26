@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { apiClient } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea, Select } from '@/components/ui/Input';
 import { Avatar, Badge } from '@/components/ui/Badge';
@@ -12,7 +12,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MessageSquare, Send, Search, X, ChevronLeft, Paperclip, Loader2, Bell, CheckCircle } from 'lucide-react';
+import { MessageSquare, Send, ChevronLeft, CheckCircle } from 'lucide-react';
 import { Contact, Message } from '@/types';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -50,10 +50,6 @@ export default function TenantMessagesPage() {
   };
 
   useEffect(() => {
-    loadConversations();
-  }, []);
-
-  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -61,15 +57,21 @@ export default function TenantMessagesPage() {
     setIsLoading(true);
     try {
       const contacts = await apiClient.get<Contact[]>('/users/contacts');
-      
+
       const convos: Conversation[] = [];
       for (const contact of contacts) {
         try {
           const msgs = await apiClient.get<Message[]>(`/messages/inbox?limit=100`);
-          const contactMsgs = msgs.filter(m => m.sender_id === contact.id || m.recipient_id === contact.id);
+          const contactMsgs = msgs.filter(
+            (m) => m.sender_id === contact.id || m.recipient_id === contact.id
+          );
           if (contactMsgs.length > 0) {
-            const sorted = contactMsgs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-            const unread = sorted.filter(m => m.recipient_id === user?.id && !m.is_read).length;
+            const sorted = contactMsgs.sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+            const unread = sorted.filter(
+              (m) => m.recipient_id === user?.id && !m.is_read
+            ).length;
             convos.push({
               id: contact.id,
               other_user: contact,
@@ -81,7 +83,13 @@ export default function TenantMessagesPage() {
           // Contact might not have messages yet
         }
       }
-      setConversations(convos.sort((a, b) => new Date(b.last_message.created_at).getTime() - new Date(a.last_message.created_at).getTime()));
+      setConversations(
+        convos.sort(
+          (a, b) =>
+            new Date(b.last_message.created_at).getTime() -
+            new Date(a.last_message.created_at).getTime()
+        )
+      );
     } catch (error) {
       console.error('Failed to load conversations:', error);
     } finally {
@@ -93,24 +101,34 @@ export default function TenantMessagesPage() {
     setSelectedConversation(conversation);
     try {
       const allMsgs = await apiClient.get<Message[]>(`/messages/inbox?limit=200`);
-      const contactMsgs = allMsgs.filter(m => 
-        (m.sender_id === conversation.other_user.id && m.recipient_id === user?.id) ||
-        (m.recipient_id === conversation.other_user.id && m.sender_id === user?.id)
+      const contactMsgs = allMsgs.filter(
+        (m) =>
+          (m.sender_id === conversation.other_user.id && m.recipient_id === user?.id) ||
+          (m.recipient_id === conversation.other_user.id && m.sender_id === user?.id)
       );
-      const sorted = contactMsgs.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      const sorted = contactMsgs.sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
       setMessages(sorted);
-      
-      const unread = sorted.filter(m => m.recipient_id === user?.id && !m.is_read);
+
+      const unread = sorted.filter((m) => m.recipient_id === user?.id && !m.is_read);
       for (const msg of unread) {
         await apiClient.put(`/messages/${msg.id}/read`);
       }
-      setConversations(prev => prev.map(c => 
-        c.id === conversation.id ? { ...c, unread_count: 0 } : c
-      ));
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === conversation.id ? { ...c, unread_count: 0 } : c
+        )
+      );
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
   };
+
+  useEffect(() => {
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (data: MessageForm) => {
     setIsSending(true);
@@ -130,7 +148,7 @@ export default function TenantMessagesPage() {
   const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim() || !selectedConversation || isSendingReply) return;
-    
+
     setIsSendingReply(true);
     try {
       await apiClient.post('/messages', {
@@ -147,17 +165,10 @@ export default function TenantMessagesPage() {
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const filteredConversations = conversations.filter(c => 
-    c.other_user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.other_user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredConversations = conversations.filter((c) =>
+    (c.other_user.first_name + ' ' + c.other_user.last_name)
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()) ||
     c.other_user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.last_message.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -176,55 +187,37 @@ export default function TenantMessagesPage() {
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}><CardContent className="h-24 animate-pulse bg-gray-200 dark:bg-gray-700" /></Card>
+            <Card key={i}>
+              <CardContent className="h-24 animate-pulse bg-gray-200 dark:bg-gray-700" />
+            </Card>
           ))}
         </div>
       </div>
     );
   }
 
-  // Empty state component
-  const EmptyState = () => (
-    <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-      <MessageSquare className="h-24 w-24 mb-4 text-gray-300 dark:text-gray-600" />
-      <h3 className="text-lg font-medium text-spurs-navy dark:text-white mb-2">Select a conversation</h3>
-      <p>Choose a conversation from the left or start a new one</p>
-      <Button onClick={() => setShowComposeModal(true)} className="mt-4 gap-2">
-        <MessageSquare className="h-4 w-4" />
-        New Message
-      </Button>
-    </div>
-  );
-
-  // No conversation selected
-  const NoConversationSelected = () => (
-    <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-      <MessageSquare className="h-24 w-24 mb-4 text-gray-300 dark:text-gray-600" />
-      <h3 className="text-lg font-medium text-spurs-navy dark:text-white mb-2">Select a conversation</h3>
-      <p>Choose a conversation from the left or start a new one</p>
-      <Button onClick={() => setShowComposeModal(true)} className="mt-4 gap-2">
-        <MessageSquare className="h-4 w-4" />
-        New Message
-      </Button>
-    </div>
-  );
-
-  // Chat header
-  const ChatHeader = () => (
-    <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-      <Avatar size="lg" name={`${selectedConversation.other_user.first_name} ${selectedConversation.other_user.last_name}`} />
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-spurs-navy dark:text-white truncate">
-          {selectedConversation.other_user.first_name} {selectedConversation.other_user.last_name}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{selectedConversation.other_user.role}</p>
+  const ChatHeader = () => {
+    if (!selectedConversation) return null;
+    return (
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
+        <Avatar
+          size="lg"
+          name={`${selectedConversation.other_user.first_name} ${selectedConversation.other_user.last_name}`}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-spurs-navy dark:text-white truncate">
+            {selectedConversation.other_user.first_name} {selectedConversation.other_user.last_name}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+            {selectedConversation.other_user.role}
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
-  // Message list
   const MessageList = () => (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={messagesEndRef}>
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
           <MessageSquare className="h-16 w-16 mb-4 text-gray-300 dark:text-gray-600" />
@@ -245,7 +238,11 @@ export default function TenantMessagesPage() {
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
-                <p className={`text-xs mt-1 opacity-70 ${msg.sender_id === user?.id ? 'text-right' : 'text-left'}`}>
+                <p
+                  className={`text-xs mt-1 opacity-70 ${
+                    msg.sender_id === user?.id ? 'text-right' : 'text-left'
+                  }`}
+                >
                   {formatDateTime(msg.created_at)}
                   {msg.sender_id === user?.id && msg.is_read && (
                     <CheckCircle className="inline h-3 w-3 ml-1 text-spurs-gold" />
@@ -255,30 +252,40 @@ export default function TenantMessagesPage() {
             </div>
           ))}
         </div>
-      ) : null}
+      )}
+      <div ref={messagesEndRef} />
     </div>
   );
 
-  // Message input
   const MessageInput = () => (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
       <form onSubmit={handleReplySubmit} className="flex items-end gap-2">
         <Textarea
           placeholder="Type a message..."
           value={replyText}
-          onChange={e => setReplyText(e.target.value)}
+          onChange={(e) => setReplyText(e.target.value)}
           rows={1}
           className="flex-1 min-h-[44px] max-h-32 resize-none pr-10"
           disabled={isSendingReply}
         />
-        <Button type="submit" variant="primary" size="icon" disabled={!replyText.trim() || isSendingReply}>
-          <Send className="h-5 w-5" />
+        <Button
+          type="submit"
+          variant="primary"
+          size="icon"
+          disabled={!replyText.trim() || isSendingReply}
+        >
+          {isSendingReply ? (
+            <LoaderIcon />
+          ) : (
+            <Send className="h-5 w-5" />
+          )}
         </Button>
       </form>
     </div>
   );
 
-  // Chat area (header + messages + input)
+  const LoaderIcon = () => <span className="animate-spin">&#9696;</span>;
+
   const ChatArea = () => (
     <div className="flex-1 flex flex-col min-w-0">
       {selectedConversation ? (
@@ -288,12 +295,21 @@ export default function TenantMessagesPage() {
           <MessageInput />
         </>
       ) : (
-        <NoConversationSelected />
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+          <MessageSquare className="h-24 w-24 mb-4 text-gray-300 dark:text-gray-600" />
+          <h3 className="text-lg font-medium text-spurs-navy dark:text-white mb-2">
+            Select a conversation
+          </h3>
+          <p>Choose a conversation from the left or start a new one</p>
+          <Button onClick={() => setShowComposeModal(true)} className="mt-4 gap-2">
+            <MessageSquare className="h-4 w-4" />
+            New Message
+          </Button>
+        </div>
       )}
     </div>
   );
 
-  // Conversation list sidebar
   const ConversationList = () => (
     <div className="w-full md:w-96 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -322,7 +338,10 @@ export default function TenantMessagesPage() {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <Avatar size="md" name={`${convo.other_user.first_name} ${convo.other_user.last_name}`} />
+                  <Avatar
+                    size="md"
+                    name={`${convo.other_user.first_name} ${convo.other_user.last_name}`}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-spurs-navy dark:text-white truncate">
@@ -336,10 +355,15 @@ export default function TenantMessagesPage() {
                       {convo.last_message.subject}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant={convo.unread_count > 0 ? 'primary' : 'secondary'} className="text-xs">
+                      <Badge
+                        variant={convo.unread_count > 0 ? 'primary' : 'secondary'}
+                        className="text-xs"
+                      >
                         {convo.unread_count > 0 ? `${convo.unread_count} unread` : 'Read'}
                       </Badge>
-                      <Badge variant="secondary" className="text-xs capitalize">{convo.other_user.role}</Badge>
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {convo.other_user.role}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -351,23 +375,26 @@ export default function TenantMessagesPage() {
     </div>
   );
 
-  // Header
   const Header = () => (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3">
         <Link href="/dashboard">
-          <Button variant="ghost" size="icon" className="sm:hidden"><ChevronLeft className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="sm:hidden">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
         </Link>
         <div>
           <h1 className="text-heading-lg font-bold text-spurs-navy dark:text-white">Messages</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Conversations with landlord and admin</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Conversations with landlord and admin
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-3">
         <Input
           placeholder="Search conversations..."
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-xs sm:max-w-md"
         />
         <Button onClick={() => setShowComposeModal(true)} className="gap-2">
@@ -377,18 +404,6 @@ export default function TenantMessagesPage() {
       </div>
     </div>
   );
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}><CardContent className="h-24 animate-pulse bg-gray-200 dark:bg-gray-700" /></Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
@@ -400,7 +415,10 @@ export default function TenantMessagesPage() {
 
       <Modal
         isOpen={showComposeModal}
-        onClose={() => { setShowComposeModal(false); reset(); }}
+        onClose={() => {
+          setShowComposeModal(false);
+          reset();
+        }}
         title="New Message"
         size="lg"
       >
@@ -411,7 +429,7 @@ export default function TenantMessagesPage() {
             {...register('recipient_id')}
           >
             <option value="">Select recipient</option>
-            {conversations.map(c => (
+            {conversations.map((c) => (
               <option key={c.id} value={c.other_user.id}>
                 {c.other_user.first_name} {c.other_user.last_name} ({c.other_user.role})
               </option>
@@ -434,7 +452,14 @@ export default function TenantMessagesPage() {
           />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <Button type="button" variant="outline" onClick={() => { setShowComposeModal(false); reset(); }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowComposeModal(false);
+                reset();
+              }}
+            >
               Cancel
             </Button>
             <Button type="submit" isLoading={isSending}>
@@ -446,48 +471,3 @@ export default function TenantMessagesPage() {
     </div>
   );
 }
-
-const messageSchema = z.object({
-  recipient_id: z.number().min(1, 'Please select a recipient'),
-  subject: z.string().min(1, 'Subject is required'),
-  body: z.string().min(1, 'Message cannot be empty'),
-});
-
-type MessageForm = z.infer<typeof messageSchema>;
-
-interface Conversation {
-  id: number;
-  other_user: Contact;
-  last_message: Message;
-  unread_count: number;
-}
-
-const formatDateTime = (date: string | Date): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-KE', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { apiClient } from '@/lib/api';
-import { formatDateTime } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input, Textarea, Select } from '@/components/ui/Input';
-import { Avatar, Badge } from '@/components/ui/Badge';
-import { Modal } from '@/components/ui/Modal';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { MessageSquare, Send, Search, X, ChevronLeft, Paperclip, Loader2, Bell, CheckCircle, Paperclip } from 'lucide-react';
-import { Contact, Message } from '@/types';
-import Link from 'next/link';
-import { toast } from 'react-hot-toast';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
