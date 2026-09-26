@@ -253,7 +253,7 @@ export default function TenantMessagesPage() {
                 </p>
               </div>
             </div>
-          {messages.length > 0 && (
+          {messages.length > 0 ? (
             <div>
               {messages.map((msg) => (
                 <div
@@ -278,7 +278,7 @@ export default function TenantMessagesPage() {
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     );
