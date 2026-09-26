@@ -584,3 +584,237 @@ async def delete_tenant(
     
     await db.commit()
     return {"message": "Tenant account and associated records deleted successfully"}
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# CARETAKER / PROPERTY MANAGER ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════
+
+@router.get("/caretaker/dashboard", response_model=DashboardMetrics)
+async def get_caretaker_dashboard(
+    current_user: User = Depends(get_current_caretaker),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get caretaker/dashboard metrics - property manager view"""
+    
+    # Count total tenants
+    result = await db.execute(
+        select(func.count(User.id)).where(User.role == UserRole.TENANT)
+    )
+    total_tenants = result.scalar() or 0
+    
+    # Count total properties
+    result = await db.execute(select(func.count(Property.id)))
+    total_properties = result.scalar() or 0
+    
+    # Count total units
+    result = await db.execute(select(func.count(Unit.id)))
+    total_units = result.scalar() or 0
+    
+    # Calculate total revenue (all time)
+    result = await db.execute(
+        select(func.sum(Payment.amount)).where(
+            Payment.status == 'paid'
+        )
+    )
+    total_revenue = float(result.scalar() or 0.0)
+    
+    # Monthly revenue (current month)
+    current_month = datetime.utcnow().month
+    current_year = datetime.utcnow().year
+    result = await db.execute(
+        select(func.sum(Payment.amount)).where(
+            and_(
+                Payment.status == 'paid',
+                func.extract('month', Payment.payment_date) == current_month,
+                func.extract('year', Payment.payment_date) == current_year
+            )
+        )
+    )
+    monthly_revenue = float(result.scalar() or 0.0)
+    
+    # Overdue amount
+    result = await db.execute(
+        select(func.sum(Payment.amount)).where(
+            and_(
+                Payment.status.in_(['pending', 'overdue']),
+                Payment.due_date < datetime.utcnow()
+            )
+        )
+    )
+    overdue_amount = float(result.scalar() or 0.0)
+    
+    # Active leases (tenants with active status and unit assigned)
+    result = await db.execute(
+        select(func.count(Tenant.id)).where(
+            and_(
+                Tenant.status == 'active',
+                Tenant.unit_id.isnot(None)
+            )
+        )
+    )
+    active_leases = result.scalar() or 0
+    
+    # Maintenance requests
+    result = await db.execute(select(func.count(MaintenanceRequest.id)))
+    maintenance_requests = result.scalar() or 0
+    
+    # Occupancy rate
+    occupancy_rate = (total_units > 0) and (active_leases / total_units * 100) or 0.0
+    
+    return DashboardMetrics(
+        total_tenants=total_tenants,
+        total_properties=total_properties,
+        total_units=total_units,
+        total_revenue=total_revenue,
+        monthly_revenue=monthly_revenue,
+        overdue_amount=overdue_amount,
+        active_leases=active_leases,
+        maintenance_requests=maintenance_requests,
+        occupancy_rate=round(occupancy_rate, 2),
+        currency="KES"
+    )
+
+
+@router.get("/caretaker/properties")
+async def get_caretaker_properties(
+    current_user: User = Depends(get_current_caretaker),
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get all properties for caretaker management"""
+    result = await db.execute(
+        select(Property)
+        .offset(skip)
+        .limit(limit)
+        .order_by(Property.created_at.desc())
+    )
+    properties = result.scalars().all()
+    
+    return [{
+        "id": p.id,
+        "name": p.name,
+        "property_type": p.property_type,
+        "address_line1": p.address_line1,
+        "city": p.city,
+        "state": p.state,
+        "total_units": p.total_units,
+        "total_rental_income": p.total_rental_income,
+        "occupancy_rate": p.occupancy_rate,
+        "status": p.status,
+    } for p in properties]
+
+
+@router.get("/caretaker/maintenance")
+async def get_caretaker_maintenance(
+    status: Optional[str] = Query(None, description="Filter by status"),
+    current_user: User = Depends(get_current_caretaker),
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get all maintenance requests for caretaker"""
+    query = select(MaintenanceRequest, Tenant, User, Unit, Property)\
+        .join(Tenant, MaintenanceRequest.tenant_id == Tenant.id)\
+        .join(User, Tenant.user_id == User.id)\
+        .join(Unit, Tenant.unit_id == Unit.id)\
+        .join(Property, Unit.property_id == Property.id)
+    
+    if status:
+        query = query.where(MaintenanceRequest.status == status)
+    
+    query = query.order_by(MaintenanceRequest.created_at.desc()).offset(skip).limit(limit)
+    result = await db.execute(query)
+    results = result.all()
+    
+    return [{
+        "id": mr.id,
+        "title": mr.title,
+        "description": mr.description,
+        "status": mr.status,
+        "priority": mr.priority,
+        "created_at": mr.created_at,
+        "tenant_name": f"{tenant.first_name} {tenant.last_name}",
+        "tenant_email": user.email,
+        "tenant_phone": user.phone,
+        "unit_number": unit.unit_number,
+        "property_name": prop.name,
+    } for mr, tenant, user, unit, prop in results]
+
+
+@router.put("/caretaker/maintenance/{request_id}/status")
+async def update_maintenance_status_caretaker(
+    request_id: int,
+    new_status: str = Query(..., description="New status"),
+    current_user: User = Depends(get_current_caretaker),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update maintenance request status (caretaker)"""
+    valid_statuses = ['pending', 'in_progress', 'completed', 'cancelled']
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    result = await db.execute(select(MaintenanceRequest).where(MaintenanceRequest.id == request_id))
+    request = result.scalars().first()
+    
+    if not request:
+        raise HTTPException(status_code=404, detail="Maintenance request not found")
+    
+    request.status = new_status
+    await db.commit()
+    
+    return {"message": "Maintenance request status updated", "status": new_status}
+
+
+@router.get("/caretaker/tenants")
+async def get_caretaker_tenants(
+    status_filter: Optional[str] = Query(None, description="Filter by status"),
+    current_user: User = Depends(get_current_caretaker),
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 50
+):
+    """Get all tenants for caretaker"""
+    query = select(
+        User.id,
+        User.first_name,
+        User.last_name,
+        User.email,
+        User.phone,
+        Property.name.label("property_name"),
+        Unit.unit_number,
+        Unit.monthly_rent,
+        Tenant.status,
+        Tenant.id.label("tenant_record_id"),
+        func.max(Payment.payment_date).label("last_payment_date")
+    ).select_from(User)\
+        .outerjoin(Tenant, User.id == Tenant.user_id)\
+        .outerjoin(Unit, Tenant.unit_id == Unit.id)\
+        .outerjoin(Property, Unit.property_id == Property.id)\
+        .outerjoin(Payment, Tenant.id == Payment.tenant_id)\
+        .where(User.role == UserRole.TENANT)\
+        .group_by(User.id, User.first_name, User.last_name, User.email, User.phone,
+                  Property.name, Unit.unit_number, Unit.monthly_rent, Tenant.status, Tenant.id)
+        .order_by(User.last_name, User.first_name)
+        .offset(skip).limit(limit)
+    
+    if status_filter:
+        query = query.where(Tenant.status == status_filter)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    return [{
+        "id": row.id,
+        "first_name": row.first_name,
+        "last_name": row.last_name,
+        "email": row.email,
+        "phone": row.phone,
+        "property_name": row.property_name,
+        "unit_number": row.unit_number,
+        "monthly_rent": float(row.monthly_rent) if row.monthly_rent else 0,
+        "status": row.status,
+        "tenant_record_id": row.tenant_record_id,
+        "last_payment_date": row.last_payment_date.isoformat() if row.last_payment_date else None,
+    } for row in rows]
