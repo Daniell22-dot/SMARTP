@@ -14,6 +14,8 @@ export interface StoredUser {
 
 export type UserRole = 'tenant' | 'landlord' | 'admin' | 'property_manager';
 
+export type User = StoredUser;
+
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);

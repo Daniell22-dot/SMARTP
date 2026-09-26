@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Droplets, Wifi, Plus, Search, Filter, Download, Edit, Trash2, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { UtilityCharge, UtilityType } from '@/types';
+import { UtilityCharge } from '@/types';
 
 const utilitySchema = z.object({
   utility_type: z.enum(['water', 'wifi']),

@@ -1,5 +1,14 @@
 export type UserRole = 'tenant' | 'landlord' | 'admin' | 'property_manager';
 
+export type UtilityType = 'water' | 'wifi';
+
+export interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  children?: NavItem[];
+}
+
 export interface User {
   id: number;
   email: string;

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Droplets, Download, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { UtilityCharge, UtilityType } from '@/types';
+import { UtilityCharge } from '@/types';
 
 export default function WaterChargesPage() {
   const { user } = useAuth();
