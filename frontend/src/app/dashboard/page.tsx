@@ -8,6 +8,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import {
   Home,
   CreditCard,
@@ -139,7 +140,7 @@ export default function TenantDashboard() {
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-heading-xl font-bold text-spurs-navy dark:text-white">
             Welcome back, {user?.first_name}!
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -148,7 +149,7 @@ export default function TenantDashboard() {
         </div>
         <div className="flex gap-2">
           <Link href="/payments">
-            <Button variant="outline" className="gap-2">
+            <Button variant="secondary" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Make Payment
             </Button>
@@ -164,65 +165,65 @@ export default function TenantDashboard() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="card-hover">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">My Rent</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                <p className="text-3xl font-bold text-spurs-navy dark:text-white mt-1">
                   {formatCurrency(stats?.total_revenue || 0)}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              <div className="w-14 h-14 rounded-xl bg-spurs-navy/10 dark:bg-spurs-navy/20 flex items-center justify-center">
+                <DollarSign className="h-7 w-7 text-spurs-navy dark:text-spurs-gold" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Payments</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                <p className="text-3xl font-bold text-spurs-navy dark:text-white mt-1">
                   {stats?.pending_payments || 0}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="w-14 h-14 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <Clock className="h-7 w-7 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Maintenance</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                <p className="text-3xl font-bold text-spurs-navy dark:text-white mt-1">
                   {stats?.maintenance_requests || 0}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <Wrench className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="w-14 h-14 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Wrench className="h-7 w-7 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card-hover">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Notifications</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                <p className="text-3xl font-bold text-spurs-navy dark:text-white mt-1">
                   {notifications.filter((n) => !n.is_read).length}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <Bell className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="w-14 h-14 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <Bell className="h-7 w-7 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </CardContent>
@@ -232,57 +233,57 @@ export default function TenantDashboard() {
       {/* Quick Actions & Recent Activity */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Quick Actions */}
-        <Card className="md:col-span-2 lg:col-span-1">
+        <Card className="md:col-span-2 lg:col-span-1 card-hover">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+              <Building2 className="h-5 w-5 text-spurs-navy" />
               Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Link href="/payments" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-3">
+                <div className="w-10 h-10 rounded-xl bg-spurs-navy/10 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-spurs-navy" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900 dark:text-white">Make a Payment</p>
+                  <p className="font-medium text-spurs-navy dark:text-white">Make a Payment</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Pay rent via M-Pesa or card</p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
               </Button>
             </Link>
             <Link href="/maintenance" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                  <Wrench className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900 dark:text-white">Report Maintenance</p>
+                  <p className="font-medium text-spurs-navy dark:text-white">Report Maintenance</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Submit a new request</p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
               </Button>
             </Link>
             <Link href="/my-property" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <Home className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900 dark:text-white">View My Property</p>
+                  <p className="font-medium text-spurs-navy dark:text-white">View My Property</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Unit details & lease info</p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
               </Button>
             </Link>
             <Link href="/documents" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3">
-                <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                   <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium text-gray-900 dark:text-white">My Documents</p>
+                  <p className="font-medium text-spurs-navy dark:text-white">My Documents</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Lease, receipts, IDs</p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
@@ -292,22 +293,22 @@ export default function TenantDashboard() {
         </Card>
 
         {/* Recent Payments */}
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+              <DollarSign className="h-5 w-5 text-spurs-navy" />
               Recent Payments
             </CardTitle>
-            <Link href="/payments" className="text-sm text-primary-600 hover:underline">
+            <Link href="/payments" className="text-sm text-spurs-gold hover:underline">
               View all
             </Link>
           </CardHeader>
           <CardContent>
             {recentPayments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8">
                 <CreditCard className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                <p>No payments yet</p>
-                <Link href="/payments" className="text-primary-600 hover:underline text-sm mt-2 inline-block">
+                <p className="text-gray-900 dark:text-white mb-2">No payments yet</p>
+                <Link href="/payments" className="text-spurs-gold hover:underline text-sm mt-2 inline-block">
                   Make your first payment
                 </Link>
               </div>
@@ -316,11 +317,11 @@ export default function TenantDashboard() {
                 {recentPayments.map((payment) => (
                   <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                        <DollarSign className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+                      <div className="w-8 h-8 rounded-lg bg-spurs-navy/10 flex items-center justify-center">
+                        <DollarSign className="h-4 w-4 text-spurs-navy" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-spurs-navy dark:text-white">
                           {formatCurrency(payment.amount)}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -342,22 +343,22 @@ export default function TenantDashboard() {
       {/* Maintenance Requests & Notifications */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Maintenance Requests */}
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Wrench className="h-5 w-5" />
               Maintenance Requests
             </CardTitle>
-            <Link href="/maintenance" className="text-sm text-primary-600 hover:underline">
+            <Link href="/maintenance" className="text-sm text-spurs-gold hover:underline">
               View all
             </Link>
           </CardHeader>
           <CardContent>
             {maintenanceRequests.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8">
                 <Wrench className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                <p>No maintenance requests</p>
-                <Link href="/maintenance" className="text-primary-600 hover:underline text-sm mt-2 inline-block">
+                <p className="text-gray-900 dark:text-white mb-2">No maintenance requests</p>
+                <Link href="/maintenance" className="text-spurs-gold hover:underline text-sm mt-2 inline-block">
                   Report an issue
                 </Link>
               </div>
@@ -367,7 +368,7 @@ export default function TenantDashboard() {
                   <div key={req.id} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white truncate">{req.title}</p>
+                        <p className="font-medium text-spurs-navy dark:text-white truncate">{req.title}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{req.description}</p>
                         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                           {formatDate(req.created_at)}
@@ -386,21 +387,21 @@ export default function TenantDashboard() {
         </Card>
 
         {/* Notifications */}
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
               Recent Notifications
             </CardTitle>
-            <Link href="/notifications" className="text-sm text-primary-600 hover:underline">
+            <Link href="/notifications" className="text-sm text-spurs-gold hover:underline">
               View all
             </Link>
           </CardHeader>
           <CardContent>
             {notifications.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8">
                 <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                <p>No notifications yet</p>
+                <p className="text-gray-900 dark:text-white mb-2">No notifications yet</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -411,12 +412,12 @@ export default function TenantDashboard() {
                       'p-3 rounded-lg border-l-4 transition-colors',
                       notif.is_read
                         ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600'
-                        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
+                        : 'bg-spurs-navy/5 dark:bg-spurs-navy/10 border-spurs-gold'
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className={cn('font-medium', !notif.is_read && 'text-gray-900 dark:text-white', notif.is_read && 'text-gray-600 dark:text-gray-400')}>
+                        <p className={cn('font-medium', !notif.is_read && 'text-spurs-navy dark:text-white', notif.is_read && 'text-gray-600 dark:text-gray-400')}>
                           {notif.title}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notif.message}</p>
@@ -425,7 +426,7 @@ export default function TenantDashboard() {
                         </p>
                       </div>
                       {!notif.is_read && (
-                        <div className="h-2 w-2 rounded-full bg-primary-600 flex-shrink-0 mt-2" />
+                        <div className="h-2 w-2 rounded-full bg-spurs-gold flex-shrink-0 mt-2" />
                       )}
                     </div>
                   </div>

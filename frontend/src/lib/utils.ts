@@ -43,3 +43,13 @@ export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
   return `${str.slice(0, length)}...`;
 }
+
+export function calculatePasswordStrength(pwd: string): number {
+  let strength = 0;
+  if (pwd.length >= 8) strength += 1;
+  if (/[A-Z]/.test(pwd)) strength += 1;
+  if (/[a-z]/.test(pwd)) strength += 1;
+  if (/[0-9]/.test(pwd)) strength += 1;
+  if (/[^A-Za-z0-9]/.test(pwd)) strength += 1;
+  return strength;
+}

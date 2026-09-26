@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const registerSchema = z.object({
@@ -60,7 +60,7 @@ export default function RegisterPage() {
   };
 
   const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-lime-500', 'bg-green-500'];
 
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
@@ -84,21 +84,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-12 w-12 rounded-xl bg-primary-600 flex items-center justify-center">
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-flex items-center gap-3">
+            <div className="w-14 h-14 rounded-xl bg-spurs-navy flex items-center justify-center">
               <span className="text-white font-bold text-2xl">RMS</span>
             </div>
-            <span className="font-semibold text-2xl text-gray-900 dark:text-white">Rental RMS</span>
+            <span className="font-bold text-2xl text-spurs-navy dark:text-white">Rental Management System</span>
           </Link>
         </div>
 
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="text-center">
-            <CardTitle>Create your account</CardTitle>
+            <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-spurs-gold flex items-center justify-center">
+              <Trophy className="h-7 w-7 text-spurs-navy" />
+            </div>
+            <CardTitle className="text-heading-lg">Create your account</CardTitle>
             <CardDescription>Join as a tenant to manage your rental</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -167,9 +170,16 @@ export default function RegisterPage() {
                 <div className="space-y-1">
                   <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className={cn('h-full transition-all duration-300', strengthColors[passwordStrength - 1] || 'bg-gray-200')}
+                      className="h-full transition-all duration-300"
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                    />
+                    >
+                      <div className="h-full bg-gray-200 dark:bg-gray-700 rounded-full" style={{ width: '100%' }}>
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${strengthColors[passwordStrength - 1] || 'bg-gray-200'}`}
+                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Password strength: {strengthLabels[passwordStrength - 1] || 'Very Weak'}
@@ -202,14 +212,14 @@ export default function RegisterPage() {
                   type="checkbox"
                   id="terms"
                   {...register('terms_accepted')}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-spurs-gold focus:ring-spurs-gold"
                   disabled={isLoading}
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-primary-600 hover:underline">Terms of Service</Link>{' '}
+                  <Link href="/terms" className="text-spurs-gold hover:underline">Terms of Service</Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-primary-600 hover:underline">Privacy Policy</Link>
+                  <Link href="/privacy" className="text-spurs-gold hover:underline">Privacy Policy</Link>
                 </label>
               </div>
 
@@ -254,7 +264,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
           Already have an account?{' '}
-          <Link href="/login" className="text-primary-600 hover:underline dark:text-primary-400 font-medium">
+          <Link href="/login" className="text-spurs-gold hover:underline dark:text-spurs-gold-light font-medium">
             Sign in
           </Link>
         </p>

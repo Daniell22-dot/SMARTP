@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Trophy } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -55,27 +55,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-12 w-12 rounded-xl bg-primary-600 flex items-center justify-center">
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-flex items-center gap-3">
+            <div className="w-14 h-14 rounded-xl bg-spurs-navy flex items-center justify-center">
               <span className="text-white font-bold text-2xl">RMS</span>
             </div>
-            <span className="font-semibold text-2xl text-gray-900 dark:text-white">Rental RMS</span>
+            <span className="font-bold text-2xl text-spurs-navy dark:text-white">Rental Management System</span>
           </Link>
         </div>
 
         {/* Card */}
-        <Card>
+        <Card className="card-hover">
           <CardHeader className="text-center">
-            <CardTitle>Welcome back</CardTitle>
+            <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-spurs-gold flex items-center justify-center">
+              <Trophy className="h-7 w-7 text-spurs-navy" />
+            </div>
+            <CardTitle className="text-heading-lg">Welcome back</CardTitle>
             <CardDescription>Sign in to your tenant portal</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {expired && (
-              <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 text-sm">
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
                 Your session has expired. Please sign in again.
               </div>
             )}
@@ -116,13 +119,13 @@ export default function LoginPage() {
                   <input
                     type="checkbox"
                     {...register('remember')}
-                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 rounded border-gray-300 text-spurs-gold focus:ring-spurs-gold"
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-primary-600 hover:underline dark:text-primary-400"
+                  className="text-sm text-spurs-gold hover:underline dark:text-spurs-gold-light"
                 >
                   Forgot password?
                 </Link>
@@ -165,16 +168,16 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
           Don't have an account?{' '}
-          <Link href="/register" className="text-primary-600 hover:underline dark:text-primary-400 font-medium">
+          <Link href="/register" className="text-spurs-gold hover:underline dark:text-spurs-gold-light font-medium">
             Create one
           </Link>
         </p>
 
         <p className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">
           By signing in, you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-primary-600">Terms of Service</Link>{' '}
+          <Link href="/terms" className="underline hover:text-spurs-gold">Terms of Service</Link>{' '}
           and{' '}
-          <Link href="/privacy" className="underline hover:text-primary-600">Privacy Policy</Link>
+          <Link href="/privacy" className="underline hover:text-spurs-gold">Privacy Policy</Link>
         </p>
       </div>
     </div>
