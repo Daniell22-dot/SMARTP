@@ -28,28 +28,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  openGraph: {
-    type: 'website',
-    locale: 'en_KE',
-    url: 'https://tuiyabelong.com',
-    siteName: 'Rental Management System',
-    title: 'Rental Management System (RMS)',
-    description: 'Complete rental property management for landlords and tenants in Kenya',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'RMS Dashboard',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Rental Management System (RMS)',
-    description: 'Complete rental property management for landlords and tenants',
-    images: ['/og-image.png'],
-  },
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',
