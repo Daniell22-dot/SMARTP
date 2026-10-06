@@ -1,5 +1,6 @@
 # backend/app/config.py
 import os
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode
 
@@ -103,6 +104,38 @@ def _normalize_asyncpg_query(url: str) -> str:
     return f"{base}{sep}{urlencode(rewritten)}"
 
 
+@lru_cache(maxsize=8)
+def _async_database_url(url: str) -> str:
+    """Turn a provider connection string into an asyncpg-compatible driver URL."""
+    if url.startswith("sqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    if url.startswith("postgresql+asyncpg://"):
+        url = _normalize_asyncpg_query(url)
+
+    # Prepared-statement caches must stay disabled against pooled serverless
+    # endpoints (Neon / Supabase pooler / pgbouncer in transaction mode).
+    _, _, existing_query = url.partition("?")
+    existing_keys = {
+        key for key, _ in parse_qsl(existing_query, keep_blank_values=True)
+    }
+
+    for key, value in (
+        ("prepared_statement_cache_size", "0"),
+        ("statement_cache_size", "0"),
+    ):
+        if key not in existing_keys:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}{key}={value}"
+
+    return url
+
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Rental Management System"
     VERSION: str = "1.0.0"
@@ -151,28 +184,7 @@ class Settings(BaseSettings):
             db_path = project_root / "rms_dev.sqlite3"
             return f"sqlite+aiosqlite:///{db_path.as_posix()}"
 
-        url = self.DATABASE_URL.strip()
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif url.startswith("postgresql://"):
-            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        elif url.startswith("sqlite://"):
-            return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
-
-        if url.startswith("postgresql+asyncpg://"):
-            url = _normalize_asyncpg_query(url)
-
-        params = [
-            "prepared_statement_cache_size=0",
-            "statement_cache_size=0"
-        ]
-
-        for param in params:
-            if param.split('=')[0] not in url:
-                separator = "&" if "?" in url else "?"
-                url = f"{url}{separator}{param}"
-
-        return url
+        return _async_database_url(self.DATABASE_URL.strip())
 
     DB_ECHO: bool = False
     DB_POOL_SIZE: int = 20

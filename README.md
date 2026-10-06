@@ -1,6 +1,6 @@
 # Rental Management System (RMS)
 
-A production-ready rental property management platform for Kenyan landlords. Built with a modern hybrid architecture: **Next.js 14 frontend** + **FastAPI backend**, deployed on **Vercel** with **Supabase PostgreSQL**.
+A production-ready rental property management platform for Kenyan landlords. Built with a modern hybrid architecture: **Next.js 14 frontend** + **FastAPI backend**, deployed on **Vercel** with **Neon PostgreSQL (serverless)**.
 
 ## Overview
 
@@ -22,14 +22,14 @@ Complete rental management for single landlords managing multiple properties:
 ### Backend (FastAPI)
 - **Framework**: FastAPI (async) + Python 3.11+
 - **ORM**: SQLAlchemy 2.0 (async) + asyncpg
-- **Database**: PostgreSQL (Supabase, transaction pooler port 6543)
+- **Database**: PostgreSQL (Neon serverless, pooled connection)
 - **Auth**: JWT (HS256) + bcrypt, rate limiting, secure password reset
 - **Payments**: M-Pesa (Safaricom) QR + manual verification
 - **AI**: DeepSeek for financial narratives
 
 ### Infrastructure
 - **Deployment**: Vercel (hybrid: Next.js edge + Python serverless functions)
-- **Database**: Supabase PostgreSQL
+- **Database**: Neon PostgreSQL (serverless)
 - **Email**: SMTP (Gmail) for notifications/password reset
 - **Security**: CSP, HSTS, X-Frame-Options, robots.txt, sitemap.xml
 
@@ -94,7 +94,7 @@ RMS/
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL (or use Supabase)
+- PostgreSQL (Neon serverless or a local instance)
 
 ### Backend Setup
 ```bash
@@ -102,7 +102,7 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env       # Edit with your Supabase credentials
+cp .env.example .env       # Edit with your Neon database credentials
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -118,7 +118,7 @@ npm run dev                # Runs on http://localhost:3000
 
 **Backend (`backend/.env`)**:
 ```env
-DATABASE_URL=postgresql://user:pass@host:6543/postgres
+DATABASE_URL=postgresql://user:pass@host.neon.tech/dbname?sslmode=require
 SECRET_KEY=your-32-char-secret
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=480
@@ -194,7 +194,11 @@ NEXT_PUBLIC_FRONTEND_URL=https://your-project.vercel.app
 - All other routes → Next.js (edge)
 
 ### 4. Database
-Use Supabase with **Transaction Pooler** (port 6543) for serverless compatibility.
+Uses **Neon PostgreSQL** (serverless). The schema is created automatically on
+startup via `ensure_tables` in `backend/app/core/database.py` (set
+`AUTO_CREATE_TABLES=0` to disable). The pooler connection string is normalized
+for asyncpg in `backend/app/config.py`, so `sslmode`/`channel_binding` in the
+URL are handled transparently.
 
 ## API Endpoints
 

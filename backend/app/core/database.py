@@ -3,6 +3,7 @@ import logging
 import os
 from typing import AsyncGenerator
 
+from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
@@ -32,14 +33,22 @@ if settings.ASYNC_DATABASE_URL.startswith("sqlite"):
         "connect_args": {"check_same_thread": False},
         "poolclass": NullPool,
     })
-elif pool_class:
-    engine_kwargs["poolclass"] = pool_class
 else:
-    engine_kwargs.update({
-        "pool_size": settings.DB_POOL_SIZE,
-        "max_overflow": settings.DB_MAX_OVERFLOW,
-        "pool_recycle": 3600,
-    })
+    # URL query parameters reach asyncpg as strings, but the driver expects
+    # integers for its statement caches. Passing them via connect_args keeps
+    # prepared statements disabled, which pgBouncer/Neon's pooler requires.
+    engine_kwargs["connect_args"] = {
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    }
+    if pool_class:
+        engine_kwargs["poolclass"] = pool_class
+    else:
+        engine_kwargs.update({
+            "pool_size": settings.DB_POOL_SIZE,
+            "max_overflow": settings.DB_MAX_OVERFLOW,
+            "pool_recycle": 3600,
+        })
 
 logger.info("Creating async database engine")
 engine = create_async_engine(settings.ASYNC_DATABASE_URL, **engine_kwargs)
@@ -77,10 +86,11 @@ async def ensure_tables() -> bool:
     """
     Idempotently create any missing tables.
 
-    Runs `create_all(checkfirst=True)`, so existing tables are never touched.
-    It is called on every cold start (including on Vercel) and is safe when
-    two instances race each other: the loser retries once and then succeeds.
-    Returns True when the schema exists.
+    A single inspector query tells us whether the schema already exists, so the
+    normal case costs one round trip; only when tables are missing does it run
+    `create_all(checkfirst=True)`. Existing tables are never modified, and a
+    race between two cold starts is retried. Returns True when the schema
+    exists.
     """
     from app.models import import_all_models
 
@@ -91,7 +101,21 @@ async def ensure_tables() -> bool:
     for attempt in range(1, attempts + 1):
         try:
             async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+                existing = set(
+                    await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
+                )
+                missing = [
+                    table
+                    for name, table in Base.metadata.tables.items()
+                    if name not in existing
+                ]
+                if missing:
+                    logger.info("Creating %s missing table(s)...", len(missing))
+                    await conn.run_sync(
+                        lambda sync_conn: Base.metadata.create_all(
+                            bind=sync_conn, tables=missing, checkfirst=True
+                        )
+                    )
             logger.info("Database schema is up to date")
             return True
         except Exception as exc:  # driver-specific exception types vary

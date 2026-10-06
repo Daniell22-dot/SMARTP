@@ -7,6 +7,7 @@ import { AuthProvider } from '@/context/AuthContext';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://tuiyabelong.com'),
   title: {
     default: 'Rental Management System (RMS)',
     template: '%s | RMS',
