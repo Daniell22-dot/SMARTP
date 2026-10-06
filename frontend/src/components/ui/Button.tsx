@@ -11,15 +11,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, disabled, children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-spurs-gold focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:pointer-events-none';
+    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full transition-colors duration-150 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00e599] focus-visible:ring-offset-0 disabled:opacity-50 disabled:pointer-events-none';
 
     const variants = {
-      primary: 'bg-spurs-navy text-white hover:bg-spurs-navy/90 active:bg-spurs-navy/80',
-      secondary: 'bg-white text-spurs-navy border border-spurs-navy hover:bg-spurs-navy/5 active:bg-spurs-navy/10 dark:bg-gray-800 dark:border-spurs-gold dark:text-spurs-gold',
-      gold: 'bg-spurs-gold text-spurs-navy hover:bg-spurs-gold/90 active:bg-spurs-gold/80 font-semibold',
-      outline: 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700',
-      ghost: 'bg-transparent text-spurs-navy hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white',
-      danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
+      primary: 'bg-white text-black hover:bg-white/85 active:bg-white/80',
+      secondary: 'bg-transparent text-white border border-[#303236] hover:bg-[#0c0d0d] active:bg-[#18191b]',
+      gold: 'bg-[#00e599] text-black hover:bg-[#00cc88] active:bg-[#0a9e6a] font-medium',
+      outline: 'border border-[#303236] bg-[#0c0d0d] text-[#c9cbcf] hover:bg-[#18191b] active:bg-[#18191b]',
+      ghost: 'bg-transparent text-[#c9cbcf] hover:text-white hover:bg-white/5',
+      danger: 'bg-[#ff3621] text-white hover:bg-[#e8301e] active:bg-[#c92a1a]',
     };
 
     const sizes = {

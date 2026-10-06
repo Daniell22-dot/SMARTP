@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/AuthContext';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geistmono' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://tuiyabelong.com'),
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#18181b' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -73,14 +74,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${geistMono.variable}`}>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="alternate icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased">
+      <body className="min-h-screen bg-black font-sans antialiased text-white">
         <AuthProvider>
           {children}
           <Toaster
@@ -88,21 +89,22 @@ export default function RootLayout({
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#18181b',
-                color: '#fafafa',
-                borderRadius: '0.75rem',
+                background: '#18191b',
+                color: '#ffffff',
+                borderRadius: '0.25rem',
                 padding: '1rem',
+                border: '1px solid #303236',
               },
               success: {
                 iconTheme: {
-                  primary: '#22c55e',
-                  secondary: '#fafafa',
+                  primary: '#00e599',
+                  secondary: '#ffffff',
                 },
               },
               error: {
                 iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fafafa',
+                  primary: '#ff3621',
+                  secondary: '#ffffff',
                 },
               },
             }}

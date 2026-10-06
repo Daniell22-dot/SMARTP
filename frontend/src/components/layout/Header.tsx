@@ -61,7 +61,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <header className="sticky top-0 z-30 h-16 border-b border-[#18191b] bg-black/80 backdrop-blur-md">
       <div className="flex h-full items-center justify-between px-4">
         {/* Left: Menu button */}
         <div className="flex items-center gap-4">
@@ -86,12 +86,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               <Bell className="h-5 w-5" />
             </Button>
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-semibold text-spurs-navy dark:text-white">Notifications</h3>
+              <div className="absolute right-0 mt-2 w-80 rounded border border-[#303236] bg-[#0c0d0d]">
+                <div className="border-b border-[#18191b] p-4">
+                  <h3 className="font-medium text-white">Notifications</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
-                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <div className="p-4 text-center text-[#797d86]">
                     No notifications yet
                   </div>
                 </div>
@@ -128,19 +128,19 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </Button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1">
-                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                  <p className="font-medium text-spurs-navy dark:text-white">
+              <div className="absolute right-0 mt-2 w-56 rounded border border-[#303236] bg-[#0c0d0d] py-1">
+                <div className="border-b border-[#18191b] px-4 py-3">
+                  <p className="font-medium text-white">
                     {user?.first_name} {user?.last_name}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+                  <p className="text-sm text-[#797d86]">{user?.email}</p>
                   <Badge variant="primary" className="mt-1">
                     {roleLabels[user?.role || '']}
                   </Badge>
                 </div>
                 <Link
                   href="/profile"
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-[#c9cbcf] hover:bg-[#18191b]"
                   onClick={() => setShowUserMenu(false)}
                 >
                   <User className="h-4 w-4" />
@@ -148,7 +148,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 </Link>
                 <button
                   onClick={() => { logout(); setShowUserMenu(false); }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#ff3621] hover:bg-[#18191b]"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign out

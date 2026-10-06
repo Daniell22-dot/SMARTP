@@ -20,7 +20,7 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300',
+        'fixed left-0 top-0 z-40 h-screen bg-[#0c0d0d] border-r border-[#18191b] transition-all duration-300',
         isCollapsed ? 'w-16' : 'w-64',
         className
       )}
@@ -28,19 +28,19 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
     >
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className={cn('flex h-16 md:h-20 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700', isCollapsed && 'justify-center')}>
+        <div className={cn('flex h-16 md:h-20 items-center justify-between px-4 border-b border-[#18191b]', isCollapsed && 'justify-center')}>
           {!isCollapsed && (
-            <Link href="/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-spurs-navy flex items-center justify-center">
-                <span className="text-white font-bold text-lg">RMS</span>
+            <Link href="/dashboard" className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00e599]">
+                <span className="text-sm font-bold text-black">r</span>
               </div>
-              <span className="font-bold text-lg text-spurs-navy dark:text-white">Rental RMS</span>
+              <span className="font-semibold tracking-tight text-white">rms</span>
             </Link>
           )}
           {isCollapsed && (
             <Link href="/dashboard" className="flex items-center justify-center">
-              <div className="w-10 h-10 rounded-lg bg-spurs-navy flex items-center justify-center">
-                <span className="text-white font-bold text-lg">RMS</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00e599]">
+                <span className="text-sm font-bold text-black">r</span>
               </div>
             </Link>
           )}
@@ -65,9 +65,9 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
         </nav>
 
         {/* Footer */}
-        <div className={cn('p-4 border-t border-gray-200 dark:border-gray-700', isCollapsed && 'hidden')}>
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            Rental Management System v1.0
+        <div className={cn('p-4 border-t border-[#18191b]', isCollapsed && 'hidden')}>
+          <div className="text-xs text-[#61646b] text-center font-mono">
+            rms v1.0
           </div>
         </div>
       </div>
@@ -92,7 +92,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
           className={cn(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
             isActive
-              ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold border-l-4 border-spurs-navy dark:border-spurs-gold'
+              ? 'bg-[#00e599]/10 text-[#00e599] border-l-2 border-[#00e599]'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
             isCollapsed && 'justify-center px-2'
           )}
@@ -132,7 +132,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
         isActive
-          ? 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold border-l-4 border-spurs-navy dark:border-spurs-gold'
+          ? 'bg-[#00e599]/10 text-[#00e599] border-l-2 border-[#00e599]'
           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
         isCollapsed && 'justify-center px-2'
       )}

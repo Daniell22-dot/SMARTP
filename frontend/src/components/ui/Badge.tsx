@@ -10,15 +10,15 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = 'default', children, ...props }, ref) => {
     const variants = {
-      default: 'bg-spurs-navy/10 text-spurs-navy dark:bg-spurs-navy/20 dark:text-spurs-gold',
-      secondary: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-      success: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      warning: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      danger: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      info: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      outline: 'border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300',
-      primary: 'bg-spurs-navy text-white',
-      gold: 'bg-spurs-gold text-spurs-navy',
+      default: 'bg-[#18191b] text-[#94979e]',
+      secondary: 'bg-[#18191b] text-[#c9cbcf]',
+      success: 'bg-green-500/10 text-green-400',
+      warning: 'bg-amber-500/10 text-amber-400',
+      danger: 'bg-[#ff3621]/10 text-[#ff3621]',
+      info: 'bg-[#00e599]/10 text-[#00e599]',
+      outline: 'border border-[#303236] text-[#c9cbcf]',
+      primary: 'bg-[#00e599]/10 text-[#00e599]',
+      gold: 'bg-[#34d59a]/10 text-[#34d59a]',
     };
 
     return (
@@ -68,7 +68,7 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
       <div
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-full bg-spurs-navy/10 dark:bg-spurs-navy/20 text-spurs-navy dark:text-spurs-gold overflow-hidden',
+          'inline-flex items-center justify-center rounded-full bg-[#18191b] text-[#c9cbcf] overflow-hidden',
           sizes[size],
           className
         )}
