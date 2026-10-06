@@ -83,7 +83,7 @@ function LoginForm() {
           </CardHeader>
           <CardContent className="space-y-4">
             {expired && (
-              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
+              <div className="p-3 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400 text-sm">
                 Your session has expired. Please sign in again.
               </div>
             )}
@@ -124,13 +124,13 @@ function LoginForm() {
                   <input
                     type="checkbox"
                     {...register('remember')}
-                    className="h-4 w-4 rounded border-gray-300 text-spurs-gold focus:ring-spurs-gold"
+                    className="h-4 w-4 rounded border-[#303236] accent-[#00e599]"
                   />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+                  <span className="text-sm text-[#94979e]">Remember me</span>
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-spurs-gold hover:underline dark:text-spurs-gold-light"
+                  className="text-sm text-[#34d59a] hover:underline"
                 >
                   Forgot password?
                 </Link>
