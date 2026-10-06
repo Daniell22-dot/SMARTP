@@ -99,15 +99,15 @@ function ResetPasswordForm() {
 
   if (!isValidToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
         <div className="w-full max-w-md text-center">
-          <div className="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-6">
-            <Lock className="h-8 w-8 text-red-600 dark:text-red-400" />
+          <div className="h-14 w-14 rounded-full bg-[#ff3621]/10 border border-[#ff3621]/20 flex items-center justify-center mx-auto mb-6">
+            <Lock className="h-7 w-7 text-[#ff3621]" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-medium text-white mb-2">
             Invalid or expired link
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-[#94979e] mb-6">
             This password reset link is invalid or has expired. Please request a new one.
           </p>
           <Link href="/forgot-password">
@@ -119,14 +119,14 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-12 w-12 rounded-xl bg-primary-600 flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">RMS</span>
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00e599]">
+              <span className="text-base font-bold text-black">r</span>
             </div>
-            <span className="font-semibold text-2xl text-gray-900 dark:text-white">Rental RMS</span>
+            <span className="text-xl font-semibold tracking-tight text-white">rms</span>
           </Link>
         </div>
 
@@ -150,7 +150,7 @@ function ResetPasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-[38px] text-[#61646b] hover:text-[#94979e]"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -159,20 +159,18 @@ function ResetPasswordForm() {
 
               {password && (
                 <div className="space-y-1">
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#18191b] rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all duration-300"
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
                     >
-                      <div className="h-full bg-gray-200 dark:bg-gray-700 rounded-full" style={{ width: '100%' }}>
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${strengthColors[passwordStrength - 1] || 'bg-gray-200'}`}
-                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                        />
-                      </div>
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${strengthColors[passwordStrength - 1] || 'bg-[#18191b]'}`}
+                        style={{ width: '100%' }}
+                      />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-[#61646b]">
                     Password strength: {strengthLabels[passwordStrength - 1] || 'Very Weak'}
                   </p>
                 </div>
@@ -191,7 +189,7 @@ function ResetPasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-[38px] text-[#61646b] hover:text-[#94979e]"
                   aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -205,7 +203,7 @@ function ResetPasswordForm() {
             </form>
 
             <div className="text-center">
-              <Link href="/login" className="text-primary-600 hover:underline dark:text-primary-400">
+              <Link href="/login" className="text-[#34d59a] hover:underline">
                 Back to Sign In
               </Link>
             </div>

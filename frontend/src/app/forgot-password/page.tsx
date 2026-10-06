@@ -47,15 +47,15 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
         <div className="w-full max-w-md text-center">
-          <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+          <div className="h-14 w-14 rounded-full bg-[#00e599]/10 border border-[#00e599]/20 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="h-7 w-7 text-[#00e599]" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-medium text-white mb-2">
             Check your email
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-[#94979e] mb-6">
             If an account exists for that email, you'll receive a password reset link shortly.
           </p>
           <Link href="/login">
@@ -67,14 +67,14 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-12 w-12 rounded-xl bg-primary-600 flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">RMS</span>
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00e599]">
+              <span className="text-base font-bold text-black">r</span>
             </div>
-            <span className="font-semibold text-2xl text-gray-900 dark:text-white">Rental RMS</span>
+            <span className="text-xl font-semibold tracking-tight text-white">rms</span>
           </Link>
         </div>
 
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   disabled={isLoading}
                 />
-                <Mail className="absolute right-3 top-[38px] h-5 w-5 text-gray-400" />
+                <Mail className="absolute right-3 top-[38px] h-5 w-5 text-[#61646b]" />
               </div>
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
             </form>
 
             <div className="text-center">
-              <Link href="/login" className="text-primary-600 hover:underline dark:text-primary-400">
+              <Link href="/login" className="text-[#34d59a] hover:underline">
                 Back to Sign In
               </Link>
             </div>
