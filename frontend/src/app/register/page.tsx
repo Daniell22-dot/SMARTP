@@ -84,23 +84,20 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <div className="w-14 h-14 rounded-xl bg-spurs-navy flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">RMS</span>
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00e599]">
+              <span className="text-base font-bold text-black">r</span>
             </div>
-            <span className="font-bold text-2xl text-spurs-navy dark:text-white">Rental Management System</span>
+            <span className="text-xl font-semibold tracking-tight text-white">rms</span>
           </Link>
         </div>
 
         <Card className="card-hover">
           <CardHeader className="text-center">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-spurs-gold flex items-center justify-center">
-              <Trophy className="h-7 w-7 text-spurs-navy" />
-            </div>
             <CardTitle className="text-heading-lg">Create your account</CardTitle>
             <CardDescription>Join as a tenant to manage your rental</CardDescription>
           </CardHeader>
@@ -168,20 +165,18 @@ export default function RegisterPage() {
 
               {password && (
                 <div className="space-y-1">
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#18191b] rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all duration-300"
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
                     >
-                      <div className="h-full bg-gray-200 dark:bg-gray-700 rounded-full" style={{ width: '100%' }}>
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${strengthColors[passwordStrength - 1] || 'bg-gray-200'}`}
-                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                        />
-                      </div>
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${strengthColors[passwordStrength - 1] || 'bg-[#18191b]'}`}
+                        style={{ width: '100%' }}
+                      />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-[#61646b]">
                     Password strength: {strengthLabels[passwordStrength - 1] || 'Very Weak'}
                   </p>
                 </div>

@@ -144,10 +144,10 @@ function LoginForm() {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200 dark:border-gray-700" />
+                <span className="w-full border-t border-[#18191b]" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+                <span className="px-4 bg-[#0c0d0d] text-[#797d86]">Or continue with</span>
               </div>
             </div>
 
@@ -171,18 +171,18 @@ function LoginForm() {
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-spurs-gold hover:underline dark:text-spurs-gold-light font-medium">
+        <p className="mt-6 text-center text-sm text-[#94979e]">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-[#34d59a] hover:underline font-medium">
             Create one
           </Link>
         </p>
 
-        <p className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-4 text-center text-xs text-[#61646b]">
           By signing in, you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-spurs-gold">Terms of Service</Link>{' '}
+          <Link href="/terms" className="underline hover:text-[#34d59a]">Terms of Service</Link>{' '}
           and{' '}
-          <Link href="/privacy" className="underline hover:text-spurs-gold">Privacy Policy</Link>
+          <Link href="/privacy" className="underline hover:text-[#34d59a]">Privacy Policy</Link>
         </p>
       </div>
     </div>
