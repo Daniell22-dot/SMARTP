@@ -207,14 +207,14 @@ export default function RegisterPage() {
                   type="checkbox"
                   id="terms"
                   {...register('terms_accepted')}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-spurs-gold focus:ring-spurs-gold"
+                  className="mt-1 h-4 w-4 rounded border-[#303236] accent-[#00e599]"
                   disabled={isLoading}
                 />
-                <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
+                <label htmlFor="terms" className="text-sm text-[#94979e]">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-spurs-gold hover:underline">Terms of Service</Link>{' '}
+                  <Link href="/terms" className="text-[#34d59a] hover:underline">Terms of Service</Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-spurs-gold hover:underline">Privacy Policy</Link>
+                  <Link href="/privacy" className="text-[#34d59a] hover:underline">Privacy Policy</Link>
                 </label>
               </div>
 
@@ -230,10 +230,10 @@ export default function RegisterPage() {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200 dark:border-gray-700" />
+                <span className="w-full border-t border-[#18191b]" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+                <span className="px-4 bg-[#0c0d0d] text-[#797d86]">Or continue with</span>
               </div>
             </div>
 
@@ -257,9 +257,9 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
 
-        <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-6 text-center text-sm text-[#94979e]">
           Already have an account?{' '}
-          <Link href="/login" className="text-spurs-gold hover:underline dark:text-spurs-gold-light font-medium">
+          <Link href="/login" className="text-[#34d59a] hover:underline font-medium">
             Sign in
           </Link>
         </p>
