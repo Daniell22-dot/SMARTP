@@ -4,26 +4,36 @@ import type { NextRequest } from 'next/server';
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/'];
 const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
 
+type StoredUser = { role?: string };
+
+function readUserCookie(raw: string | undefined): StoredUser | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(decodeURIComponent(raw));
+  } catch {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+}
+
+function homeForRole(role: string | undefined): string {
+  return role === 'landlord' || role === 'admin' ? '/landlord/dashboard' : '/dashboard';
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Read token from cookie (works in Edge runtime middleware)
   const token = request.cookies.get('rms_token')?.value;
+  const user = readUserCookie(request.cookies.get('rms_user')?.value);
 
   // Allow public paths
   if (publicPaths.some((path) => pathname === path || pathname.startsWith(path + '/'))) {
     // Redirect authenticated users away from auth pages
     if (token && authPaths.some((path) => pathname.startsWith(path))) {
-      const role = request.cookies.get('rms_user')?.value;
-      let redirectPath = '/dashboard';
-      try {
-        const user = JSON.parse(role || '{}');
-        if (user.role === 'landlord' || user.role === 'admin') {
-          redirectPath = '/landlord/dashboard';
-        }
-      } catch {
-        // ignore
-      }
-      return NextResponse.redirect(new URL(redirectPath, request.url));
+      return NextResponse.redirect(new URL(homeForRole(user?.role), request.url));
     }
     return NextResponse.next();
   }
@@ -36,14 +46,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Role-based route protection
-  const userCookie = request.cookies.get('rms_user')?.value;
-  let userRole = 'tenant';
-  try {
-    const user = JSON.parse(userCookie || '{}');
-    userRole = user.role || 'tenant';
-  } catch {
-    // ignore
-  }
+  const userRole = user?.role || 'tenant';
 
   // Landlord/Admin routes
   if (pathname.startsWith('/landlord') || pathname.startsWith('/admin')) {

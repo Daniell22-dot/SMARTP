@@ -1,6 +1,7 @@
 # backend/app/config.py
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode
 
 from pydantic_settings import BaseSettings
 from pydantic import ValidationError, Field
@@ -17,6 +18,89 @@ def _env_or_default(name: str, default: Optional[str] = None) -> Optional[str]:
     return value
 
 logger = logging.getLogger(__name__)
+
+# SQLAlchemy's asyncpg dialect forwards every URL query parameter to
+# asyncpg.connect() as a keyword argument. asyncpg only accepts its own
+# parameter names (e.g. ssl=, not libpq's sslmode=), so libpq-style
+# parameters coming from providers such as Neon, Supabase or Fly.io have to
+# be translated here or the driver fails with
+# "TypeError: connect() got an unexpected keyword argument 'sslmode'".
+_ASYNCPG_CONNECT_KWARGS = {
+    "host",
+    "port",
+    "user",
+    "password",
+    "database",
+    "passfile",
+    "service",
+    "servicefile",
+    "timeout",
+    "command_timeout",
+    "statement_cache_size",
+    "max_cached_statement_lifetime",
+    "max_cacheable_statement_size",
+    "ssl",
+    "direct_tls",
+    "target_session_attrs",
+    "krbsrvname",
+    "gsslib",
+    # handled by SQLAlchemy's asyncpg dialect before reaching asyncpg
+    "prepared_statement_cache_size",
+    "async_fallback",
+}
+
+# Query parameters asyncpg only understands inside a DSN string, or not at all.
+_UNMAPPABLE_URL_PARAMS = {
+    "sslmode",
+    "sslcert",
+    "sslkey",
+    "sslrootcert",
+    "sslcrl",
+    "sslpassword",
+    "sslnegotiation",
+    "ssl_min_protocol_version",
+    "ssl_max_protocol_version",
+    "channel_binding",
+    "server_settings",
+}
+
+
+def _normalize_asyncpg_query(url: str) -> str:
+    """Rewrite URL query parameters into arguments asyncpg.connect() accepts."""
+    base, sep, query = url.partition("?")
+    if not sep:
+        return url
+
+    original = parse_qsl(query, keep_blank_values=True)
+    rewritten = []
+    seen = {key for key, _ in original}
+
+    for key, value in original:
+        if key == "sslmode":
+            if "ssl" not in seen:
+                rewritten.append(("ssl", value))
+                seen.add("ssl")
+            continue
+        if key in _UNMAPPABLE_URL_PARAMS:
+            logger.warning(
+                "Ignoring URL parameter %r: not supported by asyncpg. "
+                "Configure it via connect_args instead.",
+                key,
+            )
+            continue
+        if key not in _ASYNCPG_CONNECT_KWARGS:
+            logger.warning(
+                "Ignoring unknown database URL parameter %r (asyncpg.connect "
+                "would reject it as an unexpected keyword argument).",
+                key,
+            )
+            continue
+        rewritten.append((key, value))
+
+    if rewritten == original:
+        return url
+
+    return f"{base}{sep}{urlencode(rewritten)}"
 
 
 class Settings(BaseSettings):
@@ -74,6 +158,9 @@ class Settings(BaseSettings):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif url.startswith("sqlite://"):
             return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+        if url.startswith("postgresql+asyncpg://"):
+            url = _normalize_asyncpg_query(url)
 
         params = [
             "prepared_statement_cache_size=0",

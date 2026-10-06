@@ -11,7 +11,7 @@ from app.api.endpoints import (
     utilities, messages
 )
 from datetime import datetime, timezone
-from app.core.database import engine, Base, AsyncSessionLocal
+from app.core.database import engine, Base, AsyncSessionLocal, ensure_tables
 from app.config import settings
 from fastapi.responses import PlainTextResponse
 from app.tasks.scheduler import start_scheduler
@@ -29,34 +29,22 @@ async def lifespan(app: FastAPI):
     Handle startup and shutdown events
     """
     is_vercel = os.environ.get("VERCEL")
-    
+    auto_create_tables = os.getenv("AUTO_CREATE_TABLES", "true").lower() not in ("0", "false", "no")
+
     # Startup
     logger.info(f"Starting up Rental Management System (Vercel: {is_vercel})...")
     
     try:
-        if not is_vercel:
-            # Import all models to ensure they are registered with Base.metadata
-            import app.models.users
-            import app.models.property
-            import app.models.unit
-            import app.models.tenant
-            import app.models.lease
-            import app.models.payment
-            import app.models.notification
-            import app.models.maintenance
-            import app.models.document
-            import app.models.interaction
-            import app.models.monitoring
-            import app.models.cache
-            import app.models.utility
-            import app.models.message
-            import app.models.password_reset
+        # Create missing database tables. This is idempotent (existing tables
+        # are never modified) and also runs on Vercel so a fresh Neon database
+        # is populated automatically on the first request.
+        if auto_create_tables:
+            logger.info("Ensuring database tables exist...")
+            await ensure_tables()
+        else:
+            logger.info("AUTO_CREATE_TABLES is disabled; skipping schema check.")
 
-            # Create database tables - do NOT do this in request path on Vercel
-            logger.info("Non-Vercel environment detected. Initializing database tables...")
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            
+        if not is_vercel:
             # Start background scheduler
             logger.info("Starting background scheduler...")
             scheduler = start_scheduler()
@@ -69,7 +57,7 @@ async def lifespan(app: FastAPI):
             
             app.state.scheduler = scheduler
         else:
-            logger.info("Vercel environment detected. Skipping automatic table creation and background scheduler.")
+            logger.info("Vercel environment detected. Background scheduler disabled.")
             
         logger.info("Application lifespan startup complete")
     except Exception as e:

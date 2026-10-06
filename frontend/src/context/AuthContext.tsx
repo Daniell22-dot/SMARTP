@@ -51,6 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Mirror the stored token/user into cookies so middleware (Edge runtime,
+    // which cannot read localStorage) can authorize protected routes.
+    const token = getToken();
+    if (token) {
+      setToken(token);
+      const stored = getUser();
+      if (stored) setUser(stored);
+    }
     refreshUser();
   }, []);
 

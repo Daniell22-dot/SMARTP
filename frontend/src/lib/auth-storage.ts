@@ -2,6 +2,24 @@ const TOKEN_KEY = 'rms_token';
 const USER_KEY = 'rms_user';
 const REFRESH_KEY = 'rms_refresh';
 
+// Mirrored into cookies so Next.js middleware (Edge runtime) can authorize
+// protected routes; localStorage stays the source of truth for API calls.
+const TOKEN_COOKIE = 'rms_token';
+const USER_COOKIE = 'rms_user';
+// Matches ACCESS_TOKEN_EXPIRE_MINUTES (480 minutes) on the backend.
+const COOKIE_MAX_AGE = 60 * 60 * 8;
+
+function writeCookie(name: string, value: string): void {
+  if (typeof document === 'undefined') return;
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=${value}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+}
+
+function expireCookie(name: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+}
+
 export interface StoredUser {
   id: number;
   email: string;
@@ -24,6 +42,7 @@ export function getToken(): string | null {
 export function setToken(token: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(TOKEN_KEY, token);
+  writeCookie(TOKEN_COOKIE, token);
 }
 
 export function clearToken(): void {
@@ -31,6 +50,8 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(REFRESH_KEY);
+  expireCookie(TOKEN_COOKIE);
+  expireCookie(USER_COOKIE);
 }
 
 export function getUser(): StoredUser | null {

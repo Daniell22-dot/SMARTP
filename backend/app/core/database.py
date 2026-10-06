@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 if not settings.ASYNC_DATABASE_URL:
     raise ValueError("DATABASE_URL must be set in Environment Variables")
 
-is_pooler = "pooler.supabase.com" in settings.ASYNC_DATABASE_URL
+# Serverless / pooled endpoints (Vercel, Neon, Supabase pooler) do not work
+# with a long-lived connection pool: every cold start gets a fresh process and
+# the pooler expects short-lived connections.
+is_pooler = any(
+    marker in settings.ASYNC_DATABASE_URL
+    for marker in ("pooler.supabase.com", "neon.tech", ".pooler.")
+)
 pool_class = NullPool if (os.getenv("VERCEL") or is_pooler) else None
 
 engine_kwargs = {
@@ -53,11 +59,60 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
+def _is_duplicate_table_error(exc: BaseException) -> bool:
+    """Detect "relation/table already exists" raised by a concurrent creator."""
+    seen = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if getattr(current, "pgcode", None) == "42P07":
+            return True
+        if "already exists" in str(current).lower():
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
+async def ensure_tables() -> bool:
+    """
+    Idempotently create any missing tables.
+
+    Runs `create_all(checkfirst=True)`, so existing tables are never touched.
+    It is called on every cold start (including on Vercel) and is safe when
+    two instances race each other: the loser retries once and then succeeds.
+    Returns True when the schema exists.
+    """
+    from app.models import import_all_models
+
+    import_all_models()
+
+    last_error: BaseException | None = None
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+            logger.info("Database schema is up to date")
+            return True
+        except Exception as exc:  # driver-specific exception types vary
+            last_error = exc
+            if not _is_duplicate_table_error(exc) or attempt == attempts:
+                break
+            logger.warning(
+                "Concurrent table creation detected, retrying (%s/%s)",
+                attempt,
+                attempts,
+            )
+
+    logger.error("Failed to create database tables: %s", last_error)
+    return False
+
+
 async def init_db():
     """
     Initialize database with default data
     """
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    if not await ensure_tables():
+        raise RuntimeError("Could not initialize database schema")
 
     logger.info("Database initialized successfully")
