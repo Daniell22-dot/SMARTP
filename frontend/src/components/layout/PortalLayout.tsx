@@ -17,7 +17,7 @@ export function PortalLayout({ children, navItems, title }: PortalLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-black">
       {/* Mobile menu overlay */}
       {isMobileMenuOpen && (
         <div
@@ -46,7 +46,7 @@ export function PortalLayout({ children, navItems, title }: PortalLayoutProps) {
         <main className="p-4 md:p-6 lg:p-8" role="main">
           {title && (
             <div className="mb-6 md:mb-8">
-              <h1 className="text-heading-xl font-bold text-spurs-navy dark:text-white">{title}</h1>
+              <h1 className="text-heading-xl font-medium text-white">{title}</h1>
             </div>
           )}
           {children}
