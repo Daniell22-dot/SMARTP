@@ -93,7 +93,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
             isActive
               ? 'bg-[#00e599]/10 text-[#00e599] border-l-2 border-[#00e599]'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
+              : 'text-[#94979e] hover:bg-[#18191b] hover:text-white',
             isCollapsed && 'justify-center px-2'
           )}
           aria-expanded={isActive}
@@ -133,7 +133,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
         isActive
           ? 'bg-[#00e599]/10 text-[#00e599] border-l-2 border-[#00e599]'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-spurs-navy dark:hover:text-spurs-gold',
+          : 'text-[#94979e] hover:bg-[#18191b] hover:text-white',
         isCollapsed && 'justify-center px-2'
       )}
       aria-current={isActive ? 'page' : undefined}
