@@ -63,24 +63,21 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <div className="w-14 h-14 rounded-xl bg-spurs-navy flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">RMS</span>
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00e599]">
+              <span className="text-base font-bold text-black">r</span>
             </div>
-            <span className="font-bold text-2xl text-spurs-navy dark:text-white">Rental Management System</span>
+            <span className="text-xl font-semibold tracking-tight text-white">rms</span>
           </Link>
         </div>
 
         {/* Card */}
         <Card className="card-hover">
           <CardHeader className="text-center">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-spurs-gold flex items-center justify-center">
-              <Trophy className="h-7 w-7 text-spurs-navy" />
-            </div>
             <CardTitle className="text-heading-lg">Welcome back</CardTitle>
             <CardDescription>Sign in to your tenant portal</CardDescription>
           </CardHeader>
