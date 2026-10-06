@@ -8,7 +8,6 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrainsmono' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://tuiyabelong.com'),
   title: {
     default: 'Rental Management System (RMS)',
     template: '%s | RMS',
