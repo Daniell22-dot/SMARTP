@@ -29,7 +29,7 @@ export default function LandlordLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <PortalLayout navItems={landlordNavItems} title="Landlord Dashboard">
+    <PortalLayout navItems={landlordNavItems}>
       {children}
     </PortalLayout>
   );

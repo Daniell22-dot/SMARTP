@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <PortalLayout navItems={adminNavItems} title="Admin Dashboard">
+    <PortalLayout navItems={adminNavItems}>
       {children}
     </PortalLayout>
   );

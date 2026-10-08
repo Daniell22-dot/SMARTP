@@ -297,13 +297,48 @@ async def login(request: Request, response: Response, form_data: OAuth2PasswordR
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+async def _ensure_portal_user(
+    db: AsyncSession,
+    email: str,
+    password: str,
+    first_name: str,
+    role: UserRole,
+    is_superuser: bool,
+) -> User:
+    """Ensure the portal account has a real users row.
+
+    Messaging (messages.sender_id / recipient_id) and notifications use FKs
+    to users.id, so portal accounts must exist as real rows — otherwise portal
+    users can neither send nor receive messages.
+    """
+    result = await db.execute(select(User).filter(User.email == email))
+    user = result.scalars().first()
+    if user:
+        return user
+
+    user = User(
+        email=email,
+        phone="",
+        first_name=first_name,
+        last_name="",
+        hashed_password=get_password_hash(password),
+        role=role,
+        is_verified=True,
+        is_superuser=is_superuser,
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    logger.info(f"Created portal user row for {email}")
+    return user
+
 class PortalLoginRequest(BaseModel):
     access_key: str
     password: str
     portal: str  # "admin" or "landlord"
 
 @router.post("/portal-login", response_model=Token)
-async def portal_login(request: Request, req: PortalLoginRequest):
+async def portal_login(request: Request, req: PortalLoginRequest, db: AsyncSession = Depends(get_db)):
     """
     Secure login for admin and landlord portals.
     Validates access key and password against environment variables.
@@ -320,6 +355,14 @@ async def portal_login(request: Request, req: PortalLoginRequest):
     if portal == "admin":
         # Validate admin credentials
         if req.access_key == settings.ADMIN_PORTAL_ACCESS_KEY and req.password == settings.ADMIN_PORTAL_PASSWORD:
+            await _ensure_portal_user(
+                db,
+                email=settings.ADMIN_PORTAL_EMAIL,
+                password=req.password,
+                first_name="Admin",
+                role=UserRole.ADMIN,
+                is_superuser=True,
+            )
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             # Create token with admin role
             access_token = create_access_token(
@@ -338,6 +381,14 @@ async def portal_login(request: Request, req: PortalLoginRequest):
     elif portal == "landlord":
         # Validate landlord credentials
         if req.access_key == settings.LANDLORD_PORTAL_ACCESS_KEY and req.password == settings.LANDLORD_PORTAL_PASSWORD:
+            await _ensure_portal_user(
+                db,
+                email=settings.LANDLORD_PORTAL_EMAIL,
+                password=req.password,
+                first_name="Landlord",
+                role=UserRole.LANDLORD,
+                is_superuser=False,
+            )
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             # Create token with landlord role
             access_token = create_access_token(

@@ -50,7 +50,7 @@ export default function AdminDashboard() {
       try {
         const [statsRes, systemRes] = await Promise.all([
           apiClient.get<AdminStats>('/admin/stats'),
-          apiClient.get<SystemInfo>('/health'),
+          apiClient.get<SystemInfo>('/monitoring/health'),
         ]);
         setStats(statsRes);
         setSystemInfo(systemRes);
