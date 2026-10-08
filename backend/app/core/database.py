@@ -15,14 +15,12 @@ logger = logging.getLogger(__name__)
 if not settings.ASYNC_DATABASE_URL:
     raise ValueError("DATABASE_URL must be set in Environment Variables")
 
-# Serverless / pooled endpoints (Vercel, Neon, Supabase pooler) do not work
-# with a long-lived connection pool: every cold start gets a fresh process and
-# the pooler expects short-lived connections.
-is_pooler = any(
-    marker in settings.ASYNC_DATABASE_URL
-    for marker in ("pooler.supabase.com", "neon.tech", ".pooler.")
-)
-pool_class = NullPool if (os.getenv("VERCEL") or is_pooler) else None
+# Serverless platforms (Vercel) get a fresh process per invocation, so a
+# long-lived pool buys nothing there. Everywhere else MUST pool: every fresh
+# connection to the remote Postgres costs seconds (TLS + auth handshake), which
+# made each request slow and intermittently blew past the driver's ~60s limit
+# ("Authentication timed out" -> 500). Connecting once and reusing is the fix.
+pool_class = NullPool if os.getenv("VERCEL") else None
 
 engine_kwargs = {
     "echo": settings.DB_ECHO,
@@ -48,6 +46,9 @@ else:
             "pool_size": settings.DB_POOL_SIZE,
             "max_overflow": settings.DB_MAX_OVERFLOW,
             "pool_recycle": 3600,
+            # Drop connections that died while idle (network blips, DB
+            # restarts) instead of handing them to a request and 500ing.
+            "pool_pre_ping": True,
         })
 
 logger.info("Creating async database engine")

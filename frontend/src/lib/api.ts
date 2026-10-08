@@ -8,7 +8,9 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  // The first DB connect after startup can take ~10s; don't give up on the
+  // request before the server does.
+  timeout: 60000,
 });
 
 // Request interceptor to add auth token

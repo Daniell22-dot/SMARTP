@@ -13,7 +13,7 @@ from app.api.endpoints import (
 from datetime import datetime, timezone
 from app.core.database import engine, Base, AsyncSessionLocal, ensure_tables
 from app.config import settings
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from app.tasks.scheduler import start_scheduler
 
 # Configure logging
@@ -79,6 +79,22 @@ app = FastAPI(
     description="Rental Management System for Landlords",
     lifespan=lifespan
 )
+
+@app.middleware("http")
+async def catch_unhandled_errors(request: Request, call_next):
+    """Turn unhandled exceptions into a JSON 500.
+
+    Registered BEFORE the CORS middleware on purpose: middleware added later
+    sits further out, so this handler runs INSIDE CORS and its response still
+    gets Access-Control-Allow-Origin headers. Without this, an exception
+    escapes to Starlette's outermost error handler and the browser reports a
+    confusing CORS error instead of the real failure (e.g. a DB timeout).
+    """
+    try:
+        return await call_next(request)
+    except Exception:
+        logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # Configure CORS - strict allowlist only, no wildcard origin regex
 app.add_middleware(
