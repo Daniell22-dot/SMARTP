@@ -7,22 +7,13 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Users, Search, Building2, DoorClosed, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Users, Search, Building2, DoorClosed, AlertTriangle, MessageSquare, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { ConfirmDialog } from '@/components/ui/Modal';
+import { TenantProfileModal, TenantProfile } from '@/components/TenantProfileModal';
 
-interface TenantRow {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  property_name: string;
-  unit_number: string;
-  monthly_rent: number;
-  status: string;
-  last_payment_date: string | null;
-  arrears: number;
-}
+interface TenantRow extends TenantProfile {}
 
 const statusVariant = (status: string) => {
   switch (status) {
@@ -40,6 +31,9 @@ export default function LandlordTenantsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [viewingTenant, setViewingTenant] = useState<TenantRow | null>(null);
+  const [deletingTenant, setDeletingTenant] = useState<TenantRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchTenants();
@@ -78,6 +72,21 @@ export default function LandlordTenantsPage() {
       arrears: tenants.reduce((sum, t) => sum + t.arrears, 0),
     };
   }, [tenants]);
+
+  const handleDelete = async () => {
+    if (!deletingTenant) return;
+    setIsDeleting(true);
+    try {
+      await apiClient.delete(`/admin/tenants/${deletingTenant.id}`);
+      toast.success('Tenant deleted');
+      setDeletingTenant(null);
+      fetchTenants();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to delete tenant');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -198,11 +207,31 @@ export default function LandlordTenantsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <Link href="/landlord/messages">
-                          <Button variant="ghost" size="icon" aria-label="Message tenant" className="text-[#00e599]">
-                            <MessageSquare className="h-4 w-4" />
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="View tenant profile"
+                            className="text-[#00e599]"
+                            onClick={() => setViewingTenant(tenant)}
+                          >
+                            <Eye className="h-4 w-4" />
                           </Button>
-                        </Link>
+                          <Link href="/landlord/messages">
+                            <Button variant="ghost" size="icon" aria-label="Message tenant" className="text-[#00e599]">
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Delete tenant"
+                            className="text-[#ff3621]"
+                            onClick={() => setDeletingTenant(tenant)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -212,6 +241,19 @@ export default function LandlordTenantsPage() {
           )}
         </CardContent>
       </Card>
+
+      <TenantProfileModal tenant={viewingTenant} onClose={() => setViewingTenant(null)} />
+
+      <ConfirmDialog
+        isOpen={!!deletingTenant}
+        onClose={() => setDeletingTenant(null)}
+        onConfirm={handleDelete}
+        title="Delete Tenant"
+        message={`Are you sure you want to delete ${deletingTenant?.name}? This permanently removes their account and associated records. This action cannot be undone.`}
+        confirmText="Delete"
+        isLoading={isDeleting}
+        variant="danger"
+      />
     </div>
   );
 }

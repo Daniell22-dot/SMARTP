@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { BarChart3, TrendingUp, Percent, Landmark } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { TaxSettingsCard } from '@/components/TaxSettingsCard';
 
 interface KRAStats {
   total_revenue: string;
@@ -164,6 +165,8 @@ export default function LandlordReportsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <TaxSettingsCard onSaved={fetchData} />
 
           <Card>
             <CardContent>

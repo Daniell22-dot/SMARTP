@@ -8,22 +8,12 @@ import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { Users, Trash2, AlertTriangle } from 'lucide-react';
+import { Users, Trash2, AlertTriangle, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { TenantProfileModal, TenantProfile } from '@/components/TenantProfileModal';
 
-interface TenantRow {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  property_name: string;
-  unit_number: string;
-  monthly_rent: number;
-  status: string;
-  last_payment_date: string | null;
-  arrears: number;
-}
+interface TenantRow extends TenantProfile {}
 
 const statusVariant = (status: string) => {
   switch (status) {
@@ -43,6 +33,7 @@ export default function AdminTenantsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [deletingTenant, setDeletingTenant] = useState<TenantRow | null>(null);
+  const [viewingTenant, setViewingTenant] = useState<TenantRow | null>(null);
 
   useEffect(() => {
     fetchTenants();
@@ -211,6 +202,15 @@ export default function AdminTenantsPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="View tenant profile"
+                        className="text-[#00e599]"
+                        onClick={() => setViewingTenant(tenant)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Link href="/admin/messages">
                         <Button variant="ghost" size="icon" aria-label="Message tenant" className="text-[#00e599]">
                           <Users className="h-4 w-4" />
@@ -244,6 +244,8 @@ export default function AdminTenantsPage() {
         isLoading={isDeleting}
         variant="danger"
       />
+
+      <TenantProfileModal tenant={viewingTenant} onClose={() => setViewingTenant(null)} />
     </div>
   );
 }

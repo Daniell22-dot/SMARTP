@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { TrendingUp, Landmark, Receipt } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { TaxSettingsCard } from '@/components/TaxSettingsCard';
 
 interface PaymentSummary {
   total_payments: number;
@@ -162,6 +163,8 @@ export default function AdminFinancePage() {
               </div>
             </CardContent>
           </Card>
+
+          <TaxSettingsCard onSaved={fetchData} />
 
           <Card>
             <CardContent>

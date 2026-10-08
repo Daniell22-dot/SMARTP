@@ -12,6 +12,7 @@ from app.models.tenant import Tenant
 from app.models.property import Property
 from app.models.unit import Unit
 from app.models.maintenance import MaintenanceRequest
+from app.models.tax import TaxSetting
 from app.api.endpoints.auth import get_current_user
 from app.api.endpoints.dependencies import get_current_admin, get_current_owner, get_current_caretaker
 from pydantic import BaseModel, Field
@@ -21,7 +22,8 @@ router = APIRouter()
 # ── Public (no auth) ────────────────────────────────────────────
 @router.get("/public-stats")
 async def get_public_stats(db: AsyncSession = Depends(get_db)):
-    """Public stats for the landing page — no auth required"""
+    """Public stats for the landing page — no auth required.
+    Financial figures (payments, revenue) are deliberately excluded for privacy."""
     try:
         result = await db.execute(select(func.count(User.id)).where(User.role == UserRole.TENANT))
         tenants = result.scalar() or 0
@@ -29,15 +31,9 @@ async def get_public_stats(db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(func.count(Property.id)))
         properties = result.scalar() or 0
 
-        result = await db.execute(select(func.count(Payment.id)).where(Payment.status == 'paid'))
-        payments = result.scalar() or 0
-
-        result = await db.execute(select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.status == 'paid'))
-        revenue = float(result.scalar() or 0)
-
-        return {"properties": properties, "tenants": tenants, "payments": payments, "revenue": revenue}
+        return {"properties": properties, "tenants": tenants}
     except Exception:
-        return {"properties": 0, "tenants": 0, "payments": 0, "revenue": 0}
+        return {"properties": 0, "tenants": 0}
 
 # Response Models
 class SystemStatsResponse(BaseModel):
@@ -127,21 +123,36 @@ async def _get_system_stats_internal(db: AsyncSession) -> SystemStatsResponse:
     )
     yearly_revenue = result.scalar() or 0.0
     
-    # Kenya corporate tax rate: 25% for rental income
-    kra_tax_rate = 0.25
-    
-    # County rates (example: Nairobi County)
-    county_rates = 25000  # KES annual
-    
-    # Calculate tax
-    tax_due = (yearly_revenue * kra_tax_rate) + county_rates
+    # Redesign: tax figures are entered manually by the landlord/admin (they know
+    # what they owe). _get_system_stats_internal reads the single active
+    # TaxSetting row; with none configured every value is 0 (nothing hardcoded).
+    tax_setting_row = await db.execute(
+        select(TaxSetting).where(TaxSetting.is_active == True).order_by(TaxSetting.id.desc()).limit(1)
+    )
+    ts = tax_setting_row.scalar_one_or_none()
+
+    kra_tax_rate = (ts.kra_tax_rate if ts else 0.0) / 100.0
+    county_rates = ts.county_rates if ts else 0.0
+    tax_override = ts.tax_override if ts else 0.0
+
+    computed_tax = (yearly_revenue * kra_tax_rate) + county_rates
+    tax_due = tax_override if tax_override and tax_override > 0 else computed_tax
     net_profit = total_revenue - tax_due
-    
+
+    if ts and ts.notes and ts.notes.strip():
+        kra_details = ts.notes.strip()
+    elif ts and (ts.kra_tax_rate or 0) > 0 and (ts.county_rates or 0) > 0:
+        kra_details = f"{ts.kra_tax_rate:g}% KRA rate + Ksh {ts.county_rates:,.2f} county land rates"
+    elif ts and (ts.kra_tax_rate or 0) > 0:
+        kra_details = f"{ts.kra_tax_rate:g}% KRA rate"
+    else:
+        kra_details = "No tax details configured — add your KRA settings to see estimates"
+
     return SystemStatsResponse(
         total_revenue=f"Ksh {total_revenue:,.2f}",
         total_tax=f"Ksh {tax_due:,.2f}",
         net_profit=f"Ksh {net_profit:,.2f}",
-        kra_details="25% Corporate Tax + County Land Rates (Nairobi)",
+        kra_details=kra_details,
         timestamp=datetime.utcnow()
     )
 
@@ -152,6 +163,64 @@ async def get_system_stats(
 ):
     """Get system financial statistics (Kenya/KRA specific)"""
     return await _get_system_stats_internal(db)
+
+class TaxSettingsPayload(BaseModel):
+    kra_tax_rate: float = 0.0
+    county_rates: float = 0.0
+    tax_override: float = 0.0
+    notes: str = ""
+
+class TaxSettingsOut(TaxSettingsPayload):
+    updated_at: Optional[datetime] = None
+
+@router.get("/tax-settings", response_model=TaxSettingsOut, status_code=status.HTTP_200_OK)
+async def get_tax_settings(
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get the manually-configured KRA / county tax details."""
+    result = await db.execute(
+        select(TaxSetting).where(TaxSetting.is_active == True).order_by(TaxSetting.id.desc()).limit(1)
+    )
+    ts = result.scalar_one_or_none()
+    if not ts:
+        return TaxSettingsOut(kra_tax_rate=0.0, county_rates=0.0, tax_override=0.0, notes="")
+    return TaxSettingsOut(
+        kra_tax_rate=ts.kra_tax_rate,
+        county_rates=ts.county_rates,
+        tax_override=ts.tax_override,
+        notes=ts.notes or "",
+        updated_at=ts.updated_at or ts.created_at,
+    )
+
+@router.put("/tax-settings", response_model=TaxSettingsOut, status_code=status.HTTP_200_OK)
+async def update_tax_settings(
+    payload: TaxSettingsPayload,
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Landlord/admin: save KRA / county tax details (no values are hardcoded)."""
+    result = await db.execute(
+        select(TaxSetting).where(TaxSetting.is_active == True).order_by(TaxSetting.id.desc()).limit(1)
+    )
+    ts = result.scalar_one_or_none()
+    if not ts:
+        ts = TaxSetting(created_by=current_user.id)
+        db.add(ts)
+    ts.kra_tax_rate = max(0.0, payload.kra_tax_rate)
+    ts.county_rates = max(0.0, payload.county_rates)
+    ts.tax_override = max(0.0, payload.tax_override)
+    ts.notes = (payload.notes or "").strip()
+    ts.updated_by = current_user.id
+    await db.commit()
+    await db.refresh(ts)
+    return TaxSettingsOut(
+        kra_tax_rate=ts.kra_tax_rate,
+        county_rates=ts.county_rates,
+        tax_override=ts.tax_override,
+        notes=ts.notes or "",
+        updated_at=ts.updated_at or ts.created_at,
+    )
 
 class PortalDashboardStats(BaseModel):
     total_properties: int

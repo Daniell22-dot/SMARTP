@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from typing import List, Optional
 from app.api.endpoints.auth import get_current_user
 from app.core.database import get_db
-from app.models.users import User
+from app.models.users import User, UserRole
 from app.models.tenant import Tenant
 from app.models.unit import Unit
 from app.models.property import Property
@@ -125,22 +125,31 @@ async def get_my_tenant_status(
     }
 
 @router.get("/", response_model=List[TenantSchema])
-async def get_tenants(db: AsyncSession = Depends(get_db)):
+async def get_tenants(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if current_user.role not in [UserRole.LANDLORD, UserRole.ADMIN]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only landlords/admins can list tenants")
     result = await db.execute(select(Tenant))
     return result.scalars().all()
 
 @router.get("/{tenant_id}", response_model=TenantSchema)
 async def get_tenant_details(
     tenant_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get details of a specific tenant"""
+    """Get details of a specific tenant (self-service or owner-only)"""
     result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
     
     if not tenant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
-    
+
+    if current_user.role not in [UserRole.LANDLORD, UserRole.ADMIN] and tenant.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this tenant")
+
     return tenant
 
 

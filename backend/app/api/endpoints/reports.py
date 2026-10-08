@@ -13,7 +13,7 @@ async def get_ai_financial_narrative(db: AsyncSession = Depends(get_db)):
     
     # Narrative Prompt
     prompt = f"""
-    Analyze these property statistics for Baringo County rental management and provide a concise, 
+    Analyze these property statistics for a Kenyan rental management portfolio and provide a concise, 
     professional summary for the owner. 
     Focus on net profit and tax implications.
     Stats: {stats}
