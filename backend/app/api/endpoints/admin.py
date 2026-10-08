@@ -153,6 +153,71 @@ async def get_system_stats(
     """Get system financial statistics (Kenya/KRA specific)"""
     return await _get_system_stats_internal(db)
 
+class PortalDashboardStats(BaseModel):
+    total_properties: int
+    total_units: int
+    occupied_units: int
+    vacant_units: int
+    total_tenants: int
+    total_payments: int
+    total_revenue: float
+    pending_payments: int
+    overdue_payments: int
+    maintenance_requests: int
+    currency: str = "KES"
+
+@router.get("/dashboard-stats", response_model=PortalDashboardStats, status_code=status.HTTP_200_OK)
+async def get_portal_dashboard_stats(
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Consistent dashboard counts for the admin & landlord dashboards."""
+    result = await db.execute(select(func.count(User.id)).where(User.role == UserRole.TENANT))
+    total_tenants = result.scalar() or 0
+
+    result = await db.execute(select(func.count(Property.id)))
+    total_properties = result.scalar() or 0
+
+    result = await db.execute(select(func.count(Unit.id)))
+    total_units = result.scalar() or 0
+
+    result = await db.execute(select(func.count(Unit.id)).where(Unit.is_occupied == True))
+    occupied_units = result.scalar() or 0
+
+    result = await db.execute(select(func.count(Payment.id)))
+    total_payments = result.scalar() or 0
+
+    result = await db.execute(
+        select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.status == 'paid')
+    )
+    total_revenue = float(result.scalar() or 0)
+
+    result = await db.execute(select(func.count(Payment.id)).where(Payment.status == 'pending'))
+    pending_payments = result.scalar() or 0
+
+    result = await db.execute(select(func.count(Payment.id)).where(Payment.status == 'overdue'))
+    overdue_payments = result.scalar() or 0
+
+    result = await db.execute(
+        select(func.count(MaintenanceRequest.id)).where(
+            MaintenanceRequest.status.notin_(['completed', 'cancelled'])
+        )
+    )
+    maintenance_requests = result.scalar() or 0
+
+    return PortalDashboardStats(
+        total_properties=total_properties,
+        total_units=total_units,
+        occupied_units=occupied_units,
+        vacant_units=total_units - occupied_units,
+        total_tenants=total_tenants,
+        total_payments=total_payments,
+        total_revenue=total_revenue,
+        pending_payments=pending_payments,
+        overdue_payments=overdue_payments,
+        maintenance_requests=maintenance_requests,
+    )
+
 @router.get("/metrics", response_model=DashboardMetrics, status_code=status.HTTP_200_OK)
 async def get_dashboard_metrics(
     current_user: User = Depends(get_current_owner),

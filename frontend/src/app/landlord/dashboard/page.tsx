@@ -81,7 +81,7 @@ export default function LandlordDashboard() {
     async function fetchData() {
       try {
         const [statsRes, paymentsRes, maintenanceRes, tenantsRes] = await Promise.all([
-          apiClient.get<LandlordStats>('/admin/stats'),
+          apiClient.get<LandlordStats>('/admin/dashboard-stats'),
           apiClient.get<RecentPayment[]>('/payments/recent?limit=5'),
           apiClient.get<MaintenanceRequest[]>('/maintenance/all?limit=5'),
           apiClient.get<TenantSummary[]>('/admin/tenants?limit=5'),

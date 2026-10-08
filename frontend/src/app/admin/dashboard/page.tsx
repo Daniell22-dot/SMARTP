@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     async function fetchData() {
       try {
         const [statsRes, systemRes] = await Promise.all([
-          apiClient.get<AdminStats>('/admin/stats'),
+          apiClient.get<AdminStats>('/admin/dashboard-stats'),
           apiClient.get<SystemInfo>('/monitoring/health'),
         ]);
         setStats(statsRes);
