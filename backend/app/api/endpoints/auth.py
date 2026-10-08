@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 
 TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA"
 
+# Account recovery: short-lived on-screen PIN (minutes) and max attempts per PIN
+RECOVERY_PIN_MINUTES = 15
+MAX_RECOVERY_PIN_ATTEMPTS = 5
+
 
 async def verify_human(token: Optional[str]) -> None:
     """Cloudflare Turnstile check ("confirm you're human").
@@ -514,9 +518,64 @@ async def forgot_password(
 
     return {"message": "If an account exists for this email, a reset link has been sent."}
 
+class RecoveryIdentityRequest(BaseModel):
+    email: EmailStr
+    phone: str
+    turnstile_token: Optional[str] = None
+
+class RecoveryIdentityOut(BaseModel):
+    pin: str
+    expires_minutes: int
+    message: str
+
+@router.post("/identity-check", response_model=RecoveryIdentityOut)
+async def identity_check(request: Request, req: RecoveryIdentityRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Verify the recovering user's email AND phone match their account, then issue
+    a short-lived 6-digit PIN that the page displays on screen. No email/SMS
+    required — both factors must be known to the real account holder.
+    """
+    client_ip = get_client_ip(request)
+    if not login_limiter.check_rate_limit(client_ip, limit=20, window=3600):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please try again later.")
+
+    await verify_human(req.turnstile_token)
+
+    normalized_email = str(req.email).strip().lower()
+
+    from app.core.validators import PhoneValidator
+    try:
+        normalized_phone = PhoneValidator.normalize(req.phone)
+    except Exception:
+        normalized_phone = req.phone.strip()
+
+    result = await db.execute(select(User).filter(User.email == normalized_email))
+    user = result.scalars().first()
+
+    # Generic failure regardless of whether the email exists or the phone
+    # mismatched, so the endpoint does not leak which emails have accounts.
+    if not user or not user.phone or user.phone != normalized_phone:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="We couldn't verify your identity with the email and phone provided.",
+        )
+
+    pin = f"{secrets.randbelow(1000000):06d}"
+    user.recovery_pin_hash = hashlib.sha256(pin.encode()).hexdigest()
+    user.recovery_pin_expires_at = datetime.now(timezone.utc) + timedelta(minutes=RECOVERY_PIN_MINUTES)
+    user.recovery_pin_attempts = 0
+    await db.commit()
+
+    return RecoveryIdentityOut(
+        pin=pin,
+        expires_minutes=RECOVERY_PIN_MINUTES,
+        message="Enter the PIN below to set your new password.",
+    )
+
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
+    recovery_pin: str = ""
     turnstile_token: Optional[str] = None
 
 @router.post("/reset-password")
@@ -527,7 +586,7 @@ async def reset_password(
 ):
     """Direct password reset - just provide email and new password.
     
-    No email/OTP required. For users who can't receive emails.
+    Requires a valid recovery PIN issued by /identity-check. No email/OTP.
     Rate limited to prevent abuse.
     """
     client_ip = get_client_ip(request)
@@ -552,6 +611,31 @@ async def reset_password(
         logger.info(f"Password reset attempted for non-existent email: {normalized_email}")
         return {"message": "If an account exists for this email, the password has been reset."}
 
+    now = datetime.now(timezone.utc)
+    pin_hash = user.recovery_pin_hash
+    expires_at = user.recovery_pin_expires_at
+    attempts = user.recovery_pin_attempts or 0
+    if not pin_hash or not expires_at or expires_at < now or attempts >= MAX_RECOVERY_PIN_ATTEMPTS:
+        await db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Recovery session is invalid or expired. Start again from the recover account page.",
+        )
+
+    pin = (req.recovery_pin or "").strip()
+    if hashlib.sha256(pin.encode()).hexdigest() != pin_hash:
+        user.recovery_pin_attempts = attempts + 1
+        await db.commit()
+        remaining = MAX_RECOVERY_PIN_ATTEMPTS - (attempts + 1)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid recovery PIN. {max(remaining, 0)} attempt(s) left. Start over if blocked.",
+        )
+
+    # PIN verified - consume it and reset the password
+    user.recovery_pin_hash = None
+    user.recovery_pin_expires_at = None
+    user.recovery_pin_attempts = 0
     user.hashed_password = get_password_hash(req.new_password)
     await db.commit()
 
