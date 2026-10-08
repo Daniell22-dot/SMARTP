@@ -35,8 +35,7 @@ export default function RecoverAccountPage() {
   const router = useRouter();
   const [step, setStep] = useState<'identity' | 'set'>('identity');
   const [email, setEmail] = useState('');
-  const [issuedPin, setIssuedPin] = useState('');
-  const [pinExpires, setPinExpires] = useState(15);
+  const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,17 +74,31 @@ export default function RecoverAccountPage() {
   const onIdentitySubmit = async (data: IdentityForm) => {
     setIsLoading(true);
     try {
-      const res = await apiClient.post<{ pin: string; expires_minutes: number; message: string }>(
+      const res = await apiClient.post<{ expires_minutes: number; message: string }>(
         '/auth/identity-check',
         { email: data.email, phone: data.phone, turnstile_token: turnstileToken || null }
       );
       setEmail(data.email);
-      setIssuedPin(res.pin);
-      setPinExpires(res.expires_minutes);
+      setPhone(data.phone);
       toast.success(res.message);
       setStep('set');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'We could not verify your identity. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onResendCode = async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient.post<{ expires_minutes: number; message: string }>(
+        '/auth/identity-check',
+        { email, phone, turnstile_token: turnstileToken || null }
+      );
+      toast.success(res.message);
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'We could not send the code. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -124,8 +137,8 @@ export default function RecoverAccountPage() {
         <div className="rounded-lg border border-[#00e599]/20 bg-[#00e599]/5 p-3 mb-4 flex items-start gap-2">
           <KeyRound className="h-4 w-4 text-[#00e599] mt-0.5 shrink-0" />
           <p className="text-sm text-[#9ab8ad]">
-            Recover your account securely. No email or SMS — verify with your account email and phone, then use the
-            PIN shown on screen.
+            Recover your account securely. Verify with your account email and phone — we'll email you a one-time
+            verification code to set a new password.
           </p>
         </div>
 
@@ -171,31 +184,31 @@ export default function RecoverAccountPage() {
 
                 <Button type="submit" className="w-full" isLoading={isLoading}>
                   {isLoading && <Loader2 className="h-4 w-4 mr-2" />}
-                  Verify &amp; Get PIN
+                  Verify &amp; Get Code
                 </Button>
               </form>
             )}
 
-            {step === 'set' && issuedPin && (
+            {step === 'set' && (
               <>
-                <div className="rounded-lg border border-dashed border-[#00e599]/40 bg-[#00e599]/10 p-4 text-center">
-                  <p className="text-xs uppercase tracking-wide text-[#9ab8ad] mb-1">Your recovery PIN</p>
-                  <p className="text-3xl font-bold tracking-[0.35em] text-white">{issuedPin}</p>
-                  <p className="text-xs text-[#61646b] mt-2">
-                    Valid for {pinExpires} minutes · single use · don't share it
+                <div className="rounded-lg border border-dashed border-[#00e599]/40 bg-[#00e599]/10 p-3 text-center">
+                  <p className="text-xs text-[#9ab8ad]">
+                    A 6-digit verification code was sent to <span className="text-white">{email}</span>. Check your
+                    inbox and enter it below.
                   </p>
                 </div>
 
                 <form onSubmit={setForm.handleSubmit(onSetSubmit)} className="space-y-4">
                   <div className="relative">
                     <Input
-                      label="Recovery PIN"
+                      label="Verification Code"
                       type="text"
                       inputMode="numeric"
                       maxLength={6}
-                      placeholder="Enter the 6-digit PIN above"
+                      placeholder="Enter the 6-digit code"
                       error={setForm.formState.errors.recovery_pin?.message}
                       {...setForm.register('recovery_pin')}
+                      autoComplete="one-time-code"
                       disabled={isLoading}
                     />
                     <ShieldCheck className="absolute right-3 top-[38px] h-5 w-5 text-[#00e599]" />
@@ -266,7 +279,15 @@ export default function RecoverAccountPage() {
                   </Button>
                 </form>
 
-                <div className="text-center">
+                <div className="text-center space-x-4">
+                  <button
+                    type="button"
+                    onClick={onResendCode}
+                    disabled={isLoading}
+                    className="text-sm text-[#34d59a] hover:underline disabled:opacity-50"
+                  >
+                    Didn't get it? Resend code
+                  </button>
                   <button
                     type="button"
                     onClick={() => setStep('identity')}

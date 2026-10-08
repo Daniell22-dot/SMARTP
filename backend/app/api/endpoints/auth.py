@@ -524,16 +524,15 @@ class RecoveryIdentityRequest(BaseModel):
     turnstile_token: Optional[str] = None
 
 class RecoveryIdentityOut(BaseModel):
-    pin: str
     expires_minutes: int
     message: str
 
 @router.post("/identity-check", response_model=RecoveryIdentityOut)
 async def identity_check(request: Request, req: RecoveryIdentityRequest, db: AsyncSession = Depends(get_db)):
     """
-    Verify the recovering user's email AND phone match their account, then issue
-    a short-lived 6-digit PIN that the page displays on screen. No email/SMS
-    required — both factors must be known to the real account holder.
+    Verify the recovering user's email AND phone match their account, then email
+    a short-lived 6-digit verification code. The code is never shown to the
+    requests caller — it only goes to the account's email address.
     """
     client_ip = get_client_ip(request)
     if not login_limiter.check_rate_limit(client_ip, limit=20, window=3600):
@@ -566,10 +565,29 @@ async def identity_check(request: Request, req: RecoveryIdentityRequest, db: Asy
     user.recovery_pin_attempts = 0
     await db.commit()
 
+    try:
+        from app.core.email import send_email
+        sent = await send_email(
+            to_email=normalized_email,
+            subject=f"{pin} is your Tuiyabelong verification code",
+            body=(
+                f"Your Tuiyabelong account recovery verification code is: {pin}\n\n"
+                f"It expires in {RECOVERY_PIN_MINUTES} minutes and can only be used once. "
+                "If you did not request this, you can safely ignore this email."
+            ),
+        )
+        if not sent:
+            raise RuntimeError("SMTP returned failure")
+    except Exception as e:
+        logger.warning(f"Failed to send recovery code to {normalized_email}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="We couldn't send the verification code right now. Please try again in a minute.",
+        )
+
     return RecoveryIdentityOut(
-        pin=pin,
         expires_minutes=RECOVERY_PIN_MINUTES,
-        message="Enter the PIN below to set your new password.",
+        message=f"A 6-digit verification code was sent to {normalized_email}. It expires in {RECOVERY_PIN_MINUTES} minutes.",
     )
 
 class ResetPasswordRequest(BaseModel):
