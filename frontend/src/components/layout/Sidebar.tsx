@@ -11,17 +11,22 @@ interface SidebarProps {
   items: NavItem[];
   isCollapsed?: boolean;
   onToggle?: () => void;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
   className?: string;
 }
 
-export function Sidebar({ items, isCollapsed = false, onToggle, className }: SidebarProps) {
+export function Sidebar({ items, isCollapsed = false, onToggle, isMobileOpen = false, onMobileClose, className }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
       className={cn(
         'fixed left-0 top-0 z-40 h-screen bg-[#0c0d0d] border-r border-[#18191b] transition-all duration-300',
+        'lg:translate-x-0',
         isCollapsed ? 'w-16' : 'w-64',
+        'max-lg:-translate-x-full',
+        isMobileOpen && 'max-lg:translate-x-0 z-50',
         className
       )}
       aria-label="Main navigation"
@@ -60,7 +65,13 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-1" aria-label="Main menu">
           {items.map((item) => (
-            <NavLink key={item.href} item={item} pathname={pathname} isCollapsed={isCollapsed} />
+            <NavLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              isCollapsed={isCollapsed}
+              onNavigate={onMobileClose}
+            />
           ))}
         </nav>
 
@@ -79,9 +90,10 @@ interface NavLinkProps {
   item: NavItem;
   pathname: string;
   isCollapsed: boolean;
+  onNavigate?: () => void;
 }
 
-function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
+function NavLink({ item, pathname, isCollapsed, onNavigate }: NavLinkProps) {
   const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
   const hasChildren = item.children && item.children.length > 0;
 
@@ -89,6 +101,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
     return (
       <div className="space-y-1">
         <button
+          onClick={onNavigate}
           className={cn(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
             isActive
@@ -110,6 +123,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
               <Link
                 key={child.href}
                 href={child.href}
+                onClick={onNavigate}
                 className={cn(
                   'block px-3 py-2 rounded-md text-sm transition-colors duration-150',
                   pathname === child.href
@@ -129,6 +143,7 @@ function NavLink({ item, pathname, isCollapsed }: NavLinkProps) {
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
         isActive

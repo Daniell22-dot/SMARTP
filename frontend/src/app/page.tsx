@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { apiClient } from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
 import {
   Building2,
   Users,
@@ -18,8 +17,6 @@ import {
 interface PublicStats {
   properties: number;
   tenants: number;
-  payments: number;
-  revenue: number;
 }
 
 const features = [
@@ -59,7 +56,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black bg-pattern text-white">
       {/* Header */}
       <header className="border-b border-[#18191b]">
         <div className="container">
@@ -115,7 +112,7 @@ export default function LandingPage() {
       {/* Stats — full width */}
       <section className="border-y border-[#303236]">
         <div className="container py-12">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 max-w-2xl">
             <div className="border-l-2 border-[#00e599] pl-4">
               <p className="font-mono text-4xl text-white md:text-5xl">{stats?.properties ?? 0}</p>
               <p className="mt-2 text-sm text-[#797d86]">Properties managed</p>
@@ -123,16 +120,6 @@ export default function LandingPage() {
             <div className="border-l-2 border-[#00e599] pl-4">
               <p className="font-mono text-4xl text-white md:text-5xl">{stats?.tenants ?? 0}</p>
               <p className="mt-2 text-sm text-[#797d86]">Active tenants</p>
-            </div>
-            <div className="border-l-2 border-[#00e599] pl-4">
-              <p className="font-mono text-4xl text-white md:text-5xl">{stats?.payments ?? 0}</p>
-              <p className="mt-2 text-sm text-[#797d86]">Payments recorded</p>
-            </div>
-            <div className="border-l-2 border-[#00e599] pl-4">
-              <p className="font-mono text-4xl text-[#00e599] md:text-5xl">
-                {formatCurrency(stats?.revenue ?? 0)}
-              </p>
-              <p className="mt-2 text-sm text-[#797d86]">Revenue collected</p>
             </div>
           </div>
         </div>
@@ -181,12 +168,25 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-[#18191b]">
-        <div className="container py-6">
+        <div className="container py-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-[#61646b]">&copy; 2026 Tuiyabelong</p>
-            <div className="flex items-center gap-6 text-sm text-[#797d86]">
+            <div className="text-center sm:text-left">
+              <p className="text-sm text-[#61646b]">&copy; 2026 Tuiyabelong</p>
+              <p className="mt-1 text-xs text-[#61646b]">
+                Developed and managed by <span className="text-[#00e599]">Daniel Manyasa</span>
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-[#797d86]">
               <Link href="/login" className="hover:text-white">Sign in</Link>
               <Link href="/register" className="hover:text-white">Create account</Link>
+              <Link href="/terms" className="hover:text-white">Terms of Service</Link>
+              <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
+              <button
+                onClick={() => window.dispatchEvent(new Event('open-cookie-settings'))}
+                className="hover:text-white cursor-pointer"
+              >
+                Cookie preferences
+              </button>
             </div>
           </div>
         </div>

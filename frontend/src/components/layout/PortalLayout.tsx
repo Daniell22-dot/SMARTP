@@ -32,6 +32,8 @@ export function PortalLayout({ children, navItems, title }: PortalLayoutProps) {
         items={navItems}
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main content */}

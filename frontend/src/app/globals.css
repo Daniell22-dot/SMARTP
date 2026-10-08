@@ -375,6 +375,23 @@
     background: radial-gradient(ellipse at center, rgba(0, 229, 153, 0.08) 0%, transparent 70%);
   }
 
+  /* Full-page background: triangulation mesh + soft green glows */
+  .bg-pattern {
+    background-color: #000;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%2300e599' stroke-width='1'%3E%3Cpath stroke-opacity='0.05' d='M0 0h80v80zM80 80h80v80zM80 0v80M0 80h80v80'/%3E%3Cpath stroke-opacity='0.03' d='M160 0L80 80 160 160M0 0l80 80v80'/%3E%3C/g%3E%3C/svg%3E"),
+      radial-gradient(ellipse 90% 60% at 10% -10%, rgba(0, 229, 153, 0.12), transparent 65%),
+      radial-gradient(ellipse 90% 60% at 110% 110%, rgba(0, 229, 153, 0.07), transparent 65%);
+    background-size: 160px 160px, 100% 100%, 100% 100%;
+    background-repeat: repeat, no-repeat, no-repeat;
+  }
+
+  /* Soft pattern for panel/hero areas */
+  .bg-pattern-soft {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2300e599' stroke-width='1'%3E%3Cpath stroke-opacity='0.04' d='M0 60L60 0h60v60l-60 60H0z'/%3E%3Cpath stroke-opacity='0.02' d='M0 120L60 60l60 60M60 0v120'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 120px;
+  }
+
   /* Clean animations */
   .animate-fade-in {
     animation: fadeIn 0.2s ease-out;

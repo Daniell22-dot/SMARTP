@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/AuthContext';
+import { CookieBanner } from '@/components/CookieBanner';
+import { SWRegister } from '@/components/SWRegister';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrainsmono' });
@@ -29,9 +31,25 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/favicon.ico',
   },
   manifest: '/manifest.json',
+  applicationName: 'Tuiyabelong',
+  appleWebApp: {
+    capable: true,
+    title: 'Tuiyabelong',
+    statusBarStyle: 'black-translucent',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -53,6 +71,8 @@ export default function RootLayout({
       <body className="min-h-screen bg-black font-sans antialiased text-white">
         <AuthProvider>
           {children}
+          <CookieBanner />
+          <SWRegister />
           <Toaster
             position="top-right"
             toastOptions={{
