@@ -80,6 +80,27 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+from fastapi.routing import APIRoute
+
+@app.middleware("http")
+async def serve_root_routes_without_redirect(request: Request, call_next):
+    """Serve routes defined as '/' when called without a trailing slash.
+
+    Vercel's edge rewrites '/api/v1/utilities/' -> '/api/v1/utilities' (308)
+    while FastAPI redirects the bare path back to the slashed one (307),
+    producing an infinite loop that breaks every collection route (utilities,
+    messages, properties, notifications, ...) in the browser. Rewrite the
+    incoming path before routing so the bare path matches directly.
+    """
+    path = request.url.path
+    if path and not path.endswith("/"):
+        for route in app.router.routes:
+            if isinstance(route, APIRoute) and route.path == path + "/":
+                request.scope["path"] = path + "/"
+                request.scope["raw_path"] = (path + "/").encode()
+                break
+    return await call_next(request)
+
 @app.middleware("http")
 async def catch_unhandled_errors(request: Request, call_next):
     """Turn unhandled exceptions into a JSON 500.
