@@ -10,6 +10,7 @@ import { apiClient } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { CreditCard, Plus, Eye, QrCode, Download, Loader2, AlertCircle } from 'lucide-react';
+import QRCode from 'qrcode';
 
 interface Payment {
   id: number;
@@ -77,13 +78,17 @@ export default function PaymentsPage() {
     }
   };
 
-  const generateQrCode = () => {
-    // M-Pesa QR code generation (simplified)
+  const generateQrCode = async () => {
     const paybill = '400200';
     const account = user?.email || 'tenant';
     const amount = 0; // Would be calculated from lease
     const qrString = `MPESA:${paybill}:${account}:${amount}`;
-    setQrData(qrString);
+    try {
+      const dataUrl = await QRCode.toDataURL(qrString, { width: 256, margin: 1 });
+      setQrData(dataUrl);
+    } catch {
+      toast.error('Failed to generate QR code');
+    }
   };
 
   if (isLoading) {
@@ -123,10 +128,7 @@ export default function PaymentsPage() {
             </div>
             <div className="text-center">
               <div className="h-64 w-64 mx-auto bg-white p-4 rounded-lg">
-                {/* In production, use a QR code library */}
-                <div className="h-full w-full flex items-center justify-center bg-gray-100 rounded">
-                  <span className="text-gray-500 text-sm">QR Code: {qrData.slice(0, 50)}...</span>
-                </div>
+                <img src={qrData} alt="M-Pesa QR Code" className="h-full w-full" />
               </div>
               <p className="mt-4 text-sm text-gray-500">Scan with M-Pesa app to pay</p>
               <p className="text-xs text-gray-400 mt-1">Paybill: 400200 | Account: {user?.email}</p>
