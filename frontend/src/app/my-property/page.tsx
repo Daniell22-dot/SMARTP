@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 import { Home, Building2, DollarSign, Calendar, MapPin, Key, Users, AlertCircle } from 'lucide-react';
 
 interface Property {
@@ -28,8 +29,23 @@ interface Unit {
   is_occupied: boolean;
 }
 
-interface UnitResponse {
-  unit: Unit | null;
+interface MyStatus {
+  has_unit: boolean;
+  tenant_id?: number;
+  unit_id?: number | null;
+  unit_number?: string;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  monthly_rent?: number | null;
+  is_occupied?: boolean | null;
+  property_name?: string;
+}
+
+interface AvailableUnit {
+  id: number;
+  unit_number: string;
+  property_name: string;
+  monthly_rent: number;
 }
 
 interface Lease {
@@ -48,24 +64,36 @@ export default function MyPropertyPage() {
   const [lease, setLease] = useState<Lease | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [propRes, unitRes, leaseRes] = await Promise.all([
-          apiClient.get<Property>('/properties/my'),
-          apiClient.get<UnitResponse>('/tenants/my-status'),
-          apiClient.get<Lease>('/leases/my').catch(() => null),
-        ]);
-        setProperty(propRes);
-        setUnit(unitRes?.unit || null);
-        setLease(leaseRes);
-      } catch (error) {
-        console.error('Failed to load property data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchData = async () => {
+    try {
+      const [propRes, statusRes, leaseRes] = await Promise.all([
+        apiClient.get<Property[]>('/properties/my'),
+        apiClient.get<MyStatus>('/tenants/my-status'),
+        apiClient.get<Lease>('/leases/my').catch(() => null),
+      ]);
+      const prop = Array.isArray(propRes) ? propRes[0] ?? null : (propRes as unknown as Property);
+      setProperty(prop);
+      setUnit(
+        statusRes?.has_unit
+          ? {
+              id: statusRes.unit_id ?? 0,
+              unit_number: statusRes.unit_number || 'N/A',
+              bedrooms: statusRes.bedrooms ?? 0,
+              bathrooms: statusRes.bathrooms ?? 0,
+              monthly_rent: statusRes.monthly_rent ?? 0,
+              is_occupied: statusRes.is_occupied ?? true,
+            }
+          : null
+      );
+      setLease(leaseRes);
+    } catch (error) {
+      console.error('Failed to load property data:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -83,15 +111,18 @@ export default function MyPropertyPage() {
 
   if (!property) {
     return (
-      <div className="text-center py-16">
-        <Home className="h-16 w-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Property Assigned</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
-          You don't have a property assigned yet. Contact your landlord to get set up.
-        </p>
-        <Link href="/maintenance">
-          <button className="text-primary-600 hover:underline">Report an Issue</button>
-        </Link>
+      <div className="space-y-6">
+        <div className="text-center py-16">
+          <Home className="h-16 w-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Property Assigned</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            You don&apos;t have a property assigned yet. Select a room below to get set up.
+          </p>
+          <Link href="/maintenance">
+            <button className="text-primary-600 hover:underline">Report an Issue</button>
+          </Link>
+        </div>
+        <AvailableRooms onClaimed={fetchData} />
       </div>
     );
   }
@@ -130,6 +161,9 @@ export default function MyPropertyPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Available Rooms (claim a room) */}
+      {!unit && <AvailableRooms onClaimed={fetchData} />}
 
       {/* Unit Details */}
       {unit && (
@@ -234,5 +268,72 @@ export default function MyPropertyPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function AvailableRooms({ onClaimed }: { onClaimed: () => void }) {
+  const [rooms, setRooms] = useState<AvailableUnit[]>([]);
+  const [claimingId, setClaimingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    apiClient
+      .get<AvailableUnit[]>('/tenants/available-units')
+      .then(setRooms)
+      .catch(() => setRooms([]));
+  }, []);
+
+  const claimRoom = async (roomId: number) => {
+    setClaimingId(roomId);
+    try {
+      await apiClient.post('/tenants/assign-room', { unit_id: roomId });
+      toast.success('Room assigned! Your details are now linked to this room.');
+      onClaimed();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to assign room');
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
+  if (rooms.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Key className="h-5 w-5" />
+          Available Rooms
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Select your room to link it to your tenant profile.
+        </p>
+        <div className="space-y-3">
+          {rooms.map((room) => (
+            <div
+              key={room.id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+            >
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {room.unit_number} &middot; {room.property_name}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {formatCurrency(room.monthly_rent)} / month
+                </p>
+              </div>
+              <button
+                onClick={() => claimRoom(room.id)}
+                disabled={claimingId !== null}
+                className="px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-50"
+              >
+                {claimingId === room.id ? 'Assigning...' : 'Select This Room'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -115,7 +115,12 @@ async def get_my_tenant_status(
     return {
         "has_unit": True,
         "tenant_id": tenant.id,
+        "unit_id": unit_data[0].id if unit_data else None,
         "unit_number": unit_data[0].unit_number if unit_data else "N/A",
+        "bedrooms": unit_data[0].bedrooms if unit_data else None,
+        "bathrooms": unit_data[0].bathrooms if unit_data else None,
+        "monthly_rent": unit_data[0].monthly_rent if unit_data else None,
+        "is_occupied": unit_data[0].is_occupied if unit_data else None,
         "property_name": unit_data[1].name if unit_data else "N/A"
     }
 
