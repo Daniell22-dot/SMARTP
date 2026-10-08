@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
 const messageSchema = z.object({
-  recipient_id: z.number().min(1, 'Please select a recipient'),
+  recipient_id: z.coerce.number().min(1, 'Please select a recipient'),
   subject: z.string().min(1, 'Subject is required'),
   body: z.string().min(1, 'Message cannot be empty'),
 });
@@ -35,6 +35,7 @@ interface Conversation {
 export default function TenantMessagesPage() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,13 +57,14 @@ export default function TenantMessagesPage() {
   const loadConversations = async () => {
     setIsLoading(true);
     try {
-      const contacts = await apiClient.get<Contact[]>('/users/contacts');
+      const contactList = await apiClient.get<Contact[]>('/users/contacts');
+      setContacts(contactList);
+      const inbox = await apiClient.get<Message[]>(`/messages/inbox?limit=100`);
 
       const convos: Conversation[] = [];
-      for (const contact of contacts) {
+      for (const contact of contactList) {
         try {
-          const msgs = await apiClient.get<Message[]>(`/messages/inbox?limit=100`);
-          const contactMsgs = msgs.filter(
+          const contactMsgs = inbox.filter(
             (m) => m.sender_id === contact.id || m.recipient_id === contact.id
           );
           if (contactMsgs.length > 0) {
@@ -429,9 +431,9 @@ export default function TenantMessagesPage() {
             {...register('recipient_id')}
           >
             <option value="">Select recipient</option>
-            {conversations.map((c) => (
-              <option key={c.id} value={c.other_user.id}>
-                {c.other_user.first_name} {c.other_user.last_name} ({c.other_user.role})
+            {contacts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.first_name} {c.last_name} ({c.role})
               </option>
             ))}
           </Select>
