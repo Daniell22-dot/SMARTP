@@ -8,8 +8,8 @@ interface AuthContextType {
   user: StoredUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<StoredUser | null>;
-  portalLogin: (accessKey: string, password: string, portal: 'admin' | 'landlord') => Promise<void>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<StoredUser | null>;
+  portalLogin: (accessKey: string, password: string, portal: 'admin' | 'landlord', turnstileToken?: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<StoredUser | null>;
@@ -64,10 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (email: string, password: string): Promise<StoredUser | null> => {
+  const login = async (email: string, password: string, turnstileToken?: string): Promise<StoredUser | null> => {
     const formData = new FormData();
     formData.append('username', email);
     formData.append('password', password);
+    if (turnstileToken) formData.append('turnstile_token', turnstileToken);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -87,11 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return refreshUser();
   };
 
-  const portalLogin = async (accessKey: string, password: string, portal: 'admin' | 'landlord') => {
+  const portalLogin = async (accessKey: string, password: string, portal: 'admin' | 'landlord', turnstileToken?: string) => {
     const response = await apiClient.post<{ access_token: string }>('/auth/portal-login', {
       access_key: accessKey,
       password,
       portal,
+      turnstile_token: turnstileToken || null,
     });
 
     setToken(response.access_token);

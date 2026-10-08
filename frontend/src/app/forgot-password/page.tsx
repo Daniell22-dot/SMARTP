@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { apiClient } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
+import { HumanCheck } from '@/components/HumanCheck';
 
 const forgotSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,6 +24,7 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const {
     register,
@@ -35,7 +37,7 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotForm) => {
     setIsLoading(true);
     try {
-      await apiClient.post('/auth/forgot-password', data);
+      await apiClient.post('/auth/forgot-password', { ...data, turnstile_token: turnstileToken || null });
       setIsSubmitted(true);
       toast.success('If an account exists, a reset link has been sent.');
     } catch (error: any) {
@@ -47,7 +49,7 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-black bg-pattern px-4 py-12">
         <div className="w-full max-w-md text-center">
           <div className="h-14 w-14 rounded-full bg-[#00e599]/10 border border-[#00e599]/20 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="h-7 w-7 text-[#00e599]" />
@@ -67,7 +69,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black bg-pattern px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
@@ -97,6 +99,8 @@ export default function ForgotPasswordPage() {
                 />
                 <Mail className="absolute right-3 top-[38px] h-5 w-5 text-[#61646b]" />
               </div>
+
+              <HumanCheck onToken={setTurnstileToken} />
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2" />}

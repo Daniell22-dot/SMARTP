@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { apiClient } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { Loader2, Eye, EyeOff, Lock } from 'lucide-react';
+import { HumanCheck } from '@/components/HumanCheck';
 
 const resetSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -39,6 +40,7 @@ function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isValidToken, setIsValidToken] = useState(true);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const token = searchParams.get('token');
   const email = searchParams.get('email');
@@ -87,6 +89,7 @@ function ResetPasswordForm() {
         email,
         token,
         new_password: data.password,
+        turnstile_token: turnstileToken || null,
       });
       toast.success('Password has been reset successfully!');
       router.push('/login');
@@ -99,7 +102,7 @@ function ResetPasswordForm() {
 
   if (!isValidToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-black bg-pattern px-4 py-12">
         <div className="w-full max-w-md text-center">
           <div className="h-14 w-14 rounded-full bg-[#ff3621]/10 border border-[#ff3621]/20 flex items-center justify-center mx-auto mb-6">
             <Lock className="h-7 w-7 text-[#ff3621]" />
@@ -119,7 +122,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black bg-pattern px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
@@ -141,7 +144,7 @@ function ResetPasswordForm() {
                 <Input
                   label="New Password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   error={errors.password?.message}
                   {...register('password')}
                   autoComplete="new-password"
@@ -180,7 +183,7 @@ function ResetPasswordForm() {
                 <Input
                   label="Confirm Password"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   error={errors.confirm_password?.message}
                   {...register('confirm_password')}
                   autoComplete="new-password"
@@ -195,6 +198,8 @@ function ResetPasswordForm() {
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+
+              <HumanCheck onToken={setTurnstileToken} />
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2" />}

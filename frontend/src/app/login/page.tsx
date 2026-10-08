@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Loader2, ShieldCheck, Building2 } from 'lucide-react';
+import { HumanCheck } from '@/components/HumanCheck';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -49,6 +50,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [portalMode, setPortalMode] = useState<'admin' | 'landlord' | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const expired = searchParams.get('expired');
   const redirect = searchParams.get('redirect');
@@ -73,7 +75,7 @@ function LoginForm() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      const signedIn = await login(data.email, data.password);
+      const signedIn = await login(data.email, data.password, turnstileToken);
       toast.success('Welcome back!');
       router.push(redirect || homeForRole(signedIn?.role));
       router.refresh();
@@ -88,7 +90,7 @@ function LoginForm() {
     if (!portalMode) return;
     setIsLoading(true);
     try {
-      await portalLogin(data.access_key, data.password, portalMode);
+      await portalLogin(data.access_key, data.password, portalMode, turnstileToken);
       toast.success(`Signed in to ${portalMode} portal`);
       router.push(portalMode === 'admin' ? '/admin/dashboard' : '/landlord/dashboard');
       router.refresh();
@@ -100,7 +102,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black bg-pattern px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
@@ -145,7 +147,7 @@ function LoginForm() {
                   <Input
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     error={portalErrors.password?.message}
                     {...registerPortal('password')}
                     autoComplete="current-password"
@@ -160,6 +162,7 @@ function LoginForm() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                <HumanCheck onToken={setTurnstileToken} />
                 <Button type="submit" className="w-full" isLoading={isLoading}>
                   {isLoading && <Loader2 className="h-4 w-4 mr-2" />}
                   Sign in to {portalMode} portal
@@ -188,7 +191,7 @@ function LoginForm() {
                 <Input
                   label="Password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   error={errors.password?.message}
                   {...register('password')}
                   autoComplete="current-password"
@@ -220,6 +223,8 @@ function LoginForm() {
                   Forgot password?
                 </Link>
               </div>
+
+              <HumanCheck onToken={setTurnstileToken} />
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2" />}

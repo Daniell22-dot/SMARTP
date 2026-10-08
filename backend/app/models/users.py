@@ -30,6 +30,10 @@ class User(BaseModel):
     is_superuser = Column(Boolean, default=False)
     last_login = Column(DateTime(timezone=True))
     profile_picture = Column(String(500))
+
+    # Legal consent — record when the user accepted the Terms of Service
+    terms_accepted_at = Column(DateTime(timezone=True), nullable=True)
+    terms_version = Column(String(20), nullable=True)
     
     # Preferences
     # The following fields are added to the User model to allow users to set their preferences for receiving notifications, as well as their preferred language and timezone. This enhances the user experience by allowing users to customize how they receive updates and interact with the application based on their individual preferences.

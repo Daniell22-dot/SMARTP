@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { HumanCheck } from '@/components/HumanCheck';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Loader2, Trophy } from 'lucide-react';
@@ -34,8 +35,9 @@ export default function RegisterPage() {
   const { register: registerUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
+const [isLoading, setIsLoading] = useState(false);
+const [passwordStrength, setPasswordStrength] = useState(0);
+const [turnstileToken, setTurnstileToken] = useState('');
 
   const {
     register,
@@ -72,6 +74,7 @@ export default function RegisterPage() {
         phone: data.phone,
         password: data.password,
         terms_accepted: data.terms_accepted,
+        turnstile_token: turnstileToken || null,
       });
       toast.success('Account created successfully!');
       router.push('/dashboard');
@@ -84,7 +87,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-black bg-pattern px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
@@ -144,7 +147,7 @@ export default function RegisterPage() {
                 <Input
                   label="Password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   error={errors.password?.message}
                   {...register('password')}
                   autoComplete="new-password"
@@ -186,7 +189,7 @@ export default function RegisterPage() {
                 <Input
                   label="Confirm Password"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   error={errors.confirm_password?.message}
                   {...register('confirm_password')}
                   autoComplete="new-password"
@@ -211,13 +214,15 @@ export default function RegisterPage() {
                   disabled={isLoading}
                 />
                 <label htmlFor="terms" className="text-sm text-[#94979e]">
-                  I agree to the Terms of Service and Privacy Policy
+                  I agree to the <Link href="/terms" target="_blank" className="text-[#00e599] underline underline-offset-2 hover:text-white">Terms of Service</Link> and <Link href="/privacy" target="_blank" className="text-[#00e599] underline underline-offset-2 hover:text-white">Privacy Policy</Link>
                 </label>
               </div>
 
               {errors.terms_accepted && (
                 <p className="text-sm text-red-600 dark:text-red-400">{errors.terms_accepted.message}</p>
               )}
+
+              <HumanCheck onToken={setTurnstileToken} />
 
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2" />}

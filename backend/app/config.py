@@ -195,6 +195,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
+    # Human verification (Cloudflare Turnstile). Empty = verification skipped,
+    # test secret = always passes (staging). Set a real secret in production.
+    TURNSTILE_SECRET_KEY: str = os.getenv("TURNSTILE_SECRET_KEY", "")
+
+    # Current Terms of Service version recorded on user acceptance
+    TERMS_VERSION: str = os.getenv("TERMS_VERSION", "2026-10-08")
+
     # Portal Login Credentials (Admin & Landlord portals)
     ADMIN_PORTAL_EMAIL: str = os.getenv("ADMIN_PORTAL_EMAIL", "admin@tuiyabelong.com")
     LANDLORD_PORTAL_EMAIL: str = os.getenv("LANDLORD_PORTAL_EMAIL", "landlord@tuiyabelong.com")

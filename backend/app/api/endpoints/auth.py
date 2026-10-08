@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Form
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import timedelta, datetime, timezone
+import json
+import os
+import urllib.request
+from urllib.parse import urlencode
 from app.config import settings
 from app.core.database import get_db
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -22,6 +26,41 @@ import secrets
 import hashlib
 
 logger = logging.getLogger(__name__)
+
+TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA"
+
+
+async def verify_human(token: Optional[str]) -> None:
+    """Cloudflare Turnstile check ("confirm you're human").
+
+    No-op when the secret is unset or the always-pass test secret is used
+    (staging/local). With a real secret configured, the token is verified with
+    Cloudflare; infrastructure failures fail open so legit users are not locked
+    out.
+    """
+    secret = (settings.TURNSTILE_SECRET_KEY or "").strip()
+    if not secret or secret == TURNSTILE_TEST_SECRET:
+        return
+    if not token:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Please confirm you are human.")
+    try:
+        body = urlencode({"secret": secret, "response": token})
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        req = urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=body,
+            method="POST",
+        )
+        req.add_header("Content-Type", "application/x-www-form-urlencoded")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        if not result.get("success"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Human verification failed. Please try again.")
+    except HTTPException:
+        raise
+    except Exception as exc:  # network issues etc -> fail open
+        logger.warning(f"Turnstile verification error - failing open: {exc}")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
@@ -79,6 +118,7 @@ class UserCreate(BaseModel):
     terms_accepted: bool
     room_number: Optional[str] = None
     monthly_rent: Optional[float] = None
+    turnstile_token: Optional[str] = None
 
 class UserOut(BaseModel):
     id: int
@@ -195,6 +235,8 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
     if not user_in.terms_accepted:
         raise HTTPException(status_code=400, detail="You must accept the terms of service")
 
+    await verify_human(user_in.turnstile_token)
+
     password_validation = PasswordValidator.validate(user_in.password)
     if not password_validation["valid"]:
         error_msg = " | ".join(password_validation["errors"])
@@ -218,7 +260,9 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
         hashed_password=get_password_hash(user_in.password),
         first_name=user_in.first_name,
         last_name=user_in.last_name,
-        role=UserRole.TENANT
+        role=UserRole.TENANT,
+        terms_accepted_at=datetime.now(timezone.utc),
+        terms_version=settings.TERMS_VERSION,
     )
     db.add(new_user)
     try:
@@ -260,12 +304,14 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
-async def login(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+async def login(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), turnstile_token: str = Form(default=""), db: AsyncSession = Depends(get_db)):
     client_ip = get_client_ip(request)
     
     # Rate limit by IP: 50 attempts per hour
     if not login_limiter.check_rate_limit(client_ip, limit=50, window=3600):
         raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+
+    await verify_human(turnstile_token or None)
 
     user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -336,6 +382,7 @@ class PortalLoginRequest(BaseModel):
     access_key: str
     password: str
     portal: str  # "admin" or "landlord"
+    turnstile_token: Optional[str] = None
 
 @router.post("/portal-login", response_model=Token)
 async def portal_login(request: Request, req: PortalLoginRequest, db: AsyncSession = Depends(get_db)):
@@ -349,6 +396,8 @@ async def portal_login(request: Request, req: PortalLoginRequest, db: AsyncSessi
     # Rate limit by IP: 50 attempts per hour
     if not login_limiter.check_rate_limit(client_ip, limit=50, window=3600):
         raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+    
+    await verify_human(req.turnstile_token)
     
     portal = req.portal.lower()
     
@@ -412,10 +461,7 @@ async def portal_login(request: Request, req: PortalLoginRequest, db: AsyncSessi
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
-
-class ResetPasswordRequest(BaseModel):
-    email: EmailStr
-    new_password: str
+    turnstile_token: Optional[str] = None
 
 @router.post("/forgot-password")
 async def forgot_password(
@@ -429,6 +475,7 @@ async def forgot_password(
         raise HTTPException(status_code=429, detail="Too many reset requests. Please try again in a few minutes.")
 
     normalized_email = str(req.email).strip().lower()
+    await verify_human(req.turnstile_token)
     result = await db.execute(select(User).filter(User.email == normalized_email))
     user = result.scalars().first()
 
@@ -470,6 +517,7 @@ async def forgot_password(
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
+    turnstile_token: Optional[str] = None
 
 @router.post("/reset-password")
 async def reset_password(
@@ -487,6 +535,7 @@ async def reset_password(
         raise HTTPException(status_code=429, detail="Too many reset attempts. Please try again in a few minutes.")
 
     normalized_email = str(req.email).strip().lower()
+    await verify_human(req.turnstile_token)
     
     from app.core.validators import PasswordValidator
     validation = PasswordValidator.validate(req.new_password)
