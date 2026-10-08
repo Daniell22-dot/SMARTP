@@ -50,10 +50,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
-      <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="manifest" href="/manifest.json" />
-      </head>
       <body className="min-h-screen bg-black font-sans antialiased text-white">
         <AuthProvider>
           {children}

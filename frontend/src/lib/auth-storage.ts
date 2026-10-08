@@ -67,7 +67,11 @@ export function getUser(): StoredUser | null {
 
 export function setUser(user: StoredUser): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  const json = JSON.stringify(user);
+  localStorage.setItem(USER_KEY, json);
+  // Mirror into a cookie so Edge middleware can read the user's role
+  // (localStorage is not available to middleware).
+  writeCookie(USER_COOKIE, encodeURIComponent(json));
 }
 
 export function isAuthenticated(): boolean {

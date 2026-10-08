@@ -28,6 +28,12 @@ const portalSchema = z.object({
 
 type PortalForm = z.infer<typeof portalSchema>;
 
+function homeForRole(role?: string): string {
+  if (role === 'admin') return '/admin/dashboard';
+  if (role === 'landlord') return '/landlord/dashboard';
+  return '/dashboard';
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
@@ -45,7 +51,7 @@ function LoginForm() {
   const [portalMode, setPortalMode] = useState<'admin' | 'landlord' | null>(null);
 
   const expired = searchParams.get('expired');
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const redirect = searchParams.get('redirect');
 
   const {
     register,
@@ -67,9 +73,9 @@ function LoginForm() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      await login(data.email, data.password);
+      const signedIn = await login(data.email, data.password);
       toast.success('Welcome back!');
-      router.push(redirect);
+      router.push(redirect || homeForRole(signedIn?.role));
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || 'Login failed. Please check your credentials.');

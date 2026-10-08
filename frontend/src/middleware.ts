@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/'];
-const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 type StoredUser = { role?: string };
 
@@ -19,22 +18,25 @@ function readUserCookie(raw: string | undefined): StoredUser | null {
   }
 }
 
-function homeForRole(role: string | undefined): string {
-  return role === 'landlord' || role === 'admin' ? '/landlord/dashboard' : '/dashboard';
-}
+// Public static assets (manifest, favicons, images, ...) must never be
+// redirected to /login — otherwise browsers receive HTML instead of JSON
+// and report "Manifest: Line: 1, column: 1, Syntax error".
+const STATIC_ASSET = /^\/(?:_next\/|manifest\.json$|favicon\.(?:ico|svg)$|robots\.txt$|sitemap\.xml$|.*\.(?:svg|png|jpe?g|gif|ico|webp|webmanifest|txt|map)$)/;
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (STATIC_ASSET.test(pathname)) {
+    return NextResponse.next();
+  }
   // Read token from cookie (works in Edge runtime middleware)
   const token = request.cookies.get('rms_token')?.value;
   const user = readUserCookie(request.cookies.get('rms_user')?.value);
 
-  // Allow public paths
+  // Allow public paths. Auth pages stay reachable even with an active
+  // session so users can switch accounts (e.g. admin → tenant) without
+  // being bounced back to their portal.
   if (publicPaths.some((path) => pathname === path || pathname.startsWith(path + '/'))) {
-    // Redirect authenticated users away from auth pages
-    if (token && authPaths.some((path) => pathname.startsWith(path))) {
-      return NextResponse.redirect(new URL(homeForRole(user?.role), request.url));
-    }
     return NextResponse.next();
   }
 

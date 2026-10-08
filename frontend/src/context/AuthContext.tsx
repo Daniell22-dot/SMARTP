@@ -8,11 +8,11 @@ interface AuthContextType {
   user: StoredUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<StoredUser | null>;
   portalLogin: (accessKey: string, password: string, portal: 'admin' | 'landlord') => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<StoredUser | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,11 +21,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<StoredUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshUser = async () => {
+  const refreshUser = async (): Promise<StoredUser | null> => {
     if (!getToken()) {
       setUserState(null);
       setIsLoading(false);
-      return;
+      return null;
     }
 
     try {
@@ -41,10 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUser(storedUser);
       setUserState(storedUser);
+      return storedUser;
     } catch (error) {
       console.error('Failed to refresh user:', error);
       clearToken();
       setUserState(null);
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<StoredUser | null> => {
     const formData = new FormData();
     formData.append('username', email);
     formData.append('password', password);
@@ -85,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
     setToken(data.access_token);
-    await refreshUser();
+    return refreshUser();
   };
 
   const portalLogin = async (accessKey: string, password: string, portal: 'admin' | 'landlord') => {
