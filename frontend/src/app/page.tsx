@@ -46,9 +46,9 @@ function Logo() {
   return (
     <div className="flex items-center gap-2.5">
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00e599]">
-        <span className="text-sm font-bold text-black">r</span>
+        <span className="text-sm font-bold text-black">t</span>
       </div>
-      <span className="text-lg font-semibold tracking-tight text-white">rms</span>
+      <span className="text-lg font-semibold tracking-tight text-white">Tuiyabelong</span>
     </div>
   );
 }
@@ -272,10 +272,7 @@ export default function LandingPage() {
                     disabled={isLoading}
                   />
                   <label htmlFor="terms" className="text-sm text-[#94979e]">
-                    I agree to the{' '}
-                    <Link href="/terms" className="text-[#34d59a] hover:underline">Terms of Service</Link>{' '}
-                    and{' '}
-                    <Link href="/privacy" className="text-[#34d59a] hover:underline">Privacy Policy</Link>
+                    I agree to the Terms of Service and Privacy Policy
                   </label>
                 </div>
                 {registerForm.formState.errors.terms_accepted && (
@@ -325,11 +322,11 @@ export default function LandingPage() {
         <div className="container py-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-sm text-[#61646b]">
-              &copy; 2026 Rental Management System
+              &copy; 2026 Tuiyabelong
             </p>
             <div className="flex items-center gap-6 text-sm text-[#797d86]">
-              <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-white">Terms of Service</Link>
+              <Link href="/login" className="hover:text-white">Sign in</Link>
+              <Link href="/register" className="hover:text-white">Create account</Link>
             </div>
           </div>
         </div>

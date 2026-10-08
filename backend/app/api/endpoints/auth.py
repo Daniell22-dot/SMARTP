@@ -45,6 +45,27 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
     if user is not None:
         return user
 
+    # Portal tokens (admin/landlord) have no database row. Build a transient
+    # User from the signed token claims so /auth/me and role checks work.
+    role = payload.get("role")
+    if role in ("admin", "landlord") and email in (
+        settings.ADMIN_PORTAL_EMAIL,
+        settings.LANDLORD_PORTAL_EMAIL,
+    ):
+        user = User(
+            id=0,
+            email=email,
+            username=None,
+            first_name="Admin" if role == "admin" else "Landlord",
+            last_name="",
+            phone="",
+            hashed_password="",
+            role=UserRole.ADMIN if role == "admin" else UserRole.LANDLORD,
+            is_verified=True,
+            is_superuser=role == "admin",
+        )
+        return user
+
     raise credentials_exception
 
 router = APIRouter()
@@ -302,7 +323,7 @@ async def portal_login(request: Request, req: PortalLoginRequest):
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             # Create token with admin role
             access_token = create_access_token(
-                data={"sub": "admin@rms.local", "role": "admin"}, 
+                data={"sub": settings.ADMIN_PORTAL_EMAIL, "role": "admin"}, 
                 expires_delta=access_token_expires
             )
             login_limiter.reset(client_ip)
@@ -320,7 +341,7 @@ async def portal_login(request: Request, req: PortalLoginRequest):
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             # Create token with landlord role
             access_token = create_access_token(
-                data={"sub": "landlord@rms.local", "role": "landlord"}, 
+                data={"sub": settings.LANDLORD_PORTAL_EMAIL, "role": "landlord"}, 
                 expires_delta=access_token_expires
             )
             login_limiter.reset(client_ip)

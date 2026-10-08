@@ -196,6 +196,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 
     # Portal Login Credentials (Admin & Landlord portals)
+    ADMIN_PORTAL_EMAIL: str = os.getenv("ADMIN_PORTAL_EMAIL", "admin@tuiyabelong.com")
+    LANDLORD_PORTAL_EMAIL: str = os.getenv("LANDLORD_PORTAL_EMAIL", "landlord@tuiyabelong.com")
     ADMIN_PORTAL_ACCESS_KEY: str = os.getenv("ADMIN_PORTAL_ACCESS_KEY", "2026")
     ADMIN_PORTAL_PASSWORD: str = os.getenv("ADMIN_PORTAL_PASSWORD", "admin@2026")
     LANDLORD_PORTAL_ACCESS_KEY: str = os.getenv("LANDLORD_PORTAL_ACCESS_KEY", "2026")

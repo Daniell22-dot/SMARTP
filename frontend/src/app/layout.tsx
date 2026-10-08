@@ -9,14 +9,14 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jet
 
 export const metadata: Metadata = {
   title: {
-    default: 'Rental Management System (RMS)',
-    template: '%s | RMS',
+    default: 'Tuiyabelong',
+    template: '%s | Tuiyabelong',
   },
   description: 'Complete rental property management for landlords and tenants in Kenya. M-Pesa payments, maintenance tracking, financial reports.',
   keywords: ['rental', 'property management', 'landlord', 'tenant', 'payments', 'maintenance', 'M-Pesa', 'Kenya'],
-  authors: [{ name: 'RMS Team' }],
-  creator: 'RMS',
-  publisher: 'RMS',
+  authors: [{ name: 'Tuiyabelong' }],
+  creator: 'Tuiyabelong',
+  publisher: 'Tuiyabelong',
   robots: {
     index: true,
     follow: true,

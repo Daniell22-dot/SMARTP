@@ -32,15 +32,15 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
           {!isCollapsed && (
             <Link href="/dashboard" className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00e599]">
-                <span className="text-sm font-bold text-black">r</span>
+                <span className="text-sm font-bold text-black">t</span>
               </div>
-              <span className="font-semibold tracking-tight text-white">rms</span>
+              <span className="font-semibold tracking-tight text-white">Tuiyabelong</span>
             </Link>
           )}
           {isCollapsed && (
             <Link href="/dashboard" className="flex items-center justify-center">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00e599]">
-                <span className="text-sm font-bold text-black">r</span>
+                <span className="text-sm font-bold text-black">t</span>
               </div>
             </Link>
           )}
@@ -67,7 +67,7 @@ export function Sidebar({ items, isCollapsed = false, onToggle, className }: Sid
         {/* Footer */}
         <div className={cn('p-4 border-t border-[#18191b]', isCollapsed && 'hidden')}>
           <div className="text-xs text-[#61646b] text-center font-mono">
-            rms v1.0
+            Tuiyabelong v1.0
           </div>
         </div>
       </div>

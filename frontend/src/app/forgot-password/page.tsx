@@ -72,9 +72,9 @@ export default function ForgotPasswordPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#00e599]">
-              <span className="text-base font-bold text-black">r</span>
+              <span className="text-base font-bold text-black">t</span>
             </div>
-            <span className="text-xl font-semibold tracking-tight text-white">rms</span>
+            <span className="text-xl font-semibold tracking-tight text-white">Tuiyabelong</span>
           </Link>
         </div>
 

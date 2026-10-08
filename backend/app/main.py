@@ -8,7 +8,7 @@ from app.api.endpoints import (
     auth, tenants, properties, payments, 
     maintenance, dashboard, documents, reports,
     notifications, interaction, monitoring, arrears,
-    utilities, messages
+    utilities, messages, leases
 )
 from datetime import datetime, timezone
 from app.core.database import engine, Base, AsyncSessionLocal, ensure_tables
@@ -154,6 +154,7 @@ app.include_router(monitoring.router, prefix=f"{settings.API_V1_STR}/monitoring"
 app.include_router(arrears.router, prefix=f"{settings.API_V1_STR}/arrears", tags=["Arrears"])
 app.include_router(utilities.router, prefix=f"{settings.API_V1_STR}/utilities", tags=["Utilities"])
 app.include_router(messages.router, prefix=f"{settings.API_V1_STR}/messages", tags=["Messages"])
+app.include_router(leases.router, prefix=f"{settings.API_V1_STR}/leases", tags=["Leases"])
 
 # Admin Router (New)
 from app.api.endpoints import admin, users
