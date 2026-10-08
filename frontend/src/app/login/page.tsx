@@ -217,7 +217,7 @@ function LoginForm() {
                   <span className="text-sm text-[#94979e]">Remember me</span>
                 </label>
                 <Link
-                  href="/forgot-password"
+                  href="/recover-account"
                   className="text-sm text-[#34d59a] hover:underline"
                 >
                   Forgot password?

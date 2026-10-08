@@ -113,8 +113,8 @@ function ResetPasswordForm() {
           <p className="text-[#94979e] mb-6">
             This password reset link is invalid or has expired. Please request a new one.
           </p>
-          <Link href="/forgot-password">
-            <Button className="w-full">Request New Link</Button>
+          <Link href="/recover-account">
+            <Button className="w-full">Recover Account</Button>
           </Link>
         </div>
       </div>
