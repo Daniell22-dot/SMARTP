@@ -143,7 +143,7 @@ export default function PrivacyPage() {
 
       <footer className="border-t border-[#18191b] py-6">
         <div className="container text-center text-xs text-[#61646b]">
-          <p>&copy; 2026 Tuiyabelong. Developed and managed by Daniel Manyasa.</p>
+          <p>&copy; 2026 Tuiyabelong</p>
         </div>
       </footer>
     </div>
