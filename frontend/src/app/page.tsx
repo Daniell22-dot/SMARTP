@@ -172,9 +172,6 @@ export default function LandingPage() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="text-center sm:text-left">
               <p className="text-sm text-[#61646b]">&copy; 2026 Tuiyabelong</p>
-              <p className="mt-1 text-xs text-[#61646b]">
-                Developed and managed by <span className="text-[#00e599]">Daniel Manyasa</span>
-              </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-[#797d86]">
               <Link href="/login" className="hover:text-white">Sign in</Link>
