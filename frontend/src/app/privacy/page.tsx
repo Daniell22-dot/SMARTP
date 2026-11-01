@@ -124,7 +124,6 @@ export default function PrivacyPage() {
             <Section title="10. Contact">
               <div className="space-y-1">
                 <p><strong className="text-white">Platform:</strong> Tuiyabelong</p>
-                <p><strong className="text-white">Developer:</strong> Daniel Manyasa</p>
                 <p><strong className="text-white">Domain:</strong> www.tuiyabelong.com</p>
               </div>
             </Section>
